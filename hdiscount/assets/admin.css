@@ -399,3 +399,127 @@
     background-position: center;
     background-repeat: no-repeat;
 }
+
+/* ---------- Modal do guia ---------- */
+.hdiscount-modal-open {
+    overflow: hidden;
+}
+
+.hdiscount-modal[hidden] {
+    display: none;
+}
+
+.hdiscount-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 160000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.hdiscount-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba( 20, 24, 28, .62 );
+}
+
+.hdiscount-modal__box {
+    position: relative;
+    width: 100%;
+    max-width: 780px;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 8px 30px rgba( 0, 0, 0, .3 );
+}
+
+.hdiscount-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid #dcdcde;
+}
+
+.hdiscount-modal__header h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 16px;
+}
+
+.hdiscount-modal__version {
+    padding: 2px 8px;
+    background: #2271b1;
+    border-radius: 3px;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.hdiscount-modal__close {
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 3px;
+    background: transparent;
+    color: #50575e;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.hdiscount-modal__close:hover {
+    background: #f0f0f1;
+}
+
+.hdiscount-modal__body {
+    overflow-y: auto;
+    padding: 18px;
+}
+
+.hdiscount-modal__footer {
+    padding: 12px 18px;
+    border-top: 1px solid #dcdcde;
+    background: #fcfcfc;
+    font-size: 13px;
+}
+
+.hdiscount-about-trigger--inline {
+    border: 0;
+    background: none;
+    padding: 0;
+    color: #2271b1;
+    cursor: pointer;
+    text-decoration: underline;
+    font-size: inherit;
+}
+
+/* No modal o cabecalho antigo fica redundante. */
+.hdiscount-modal .hdiscount-about h1 {
+    display: none;
+}
+
+.hdiscount-modal .hdiscount-about .about-text:first-of-type {
+    margin-top: 0;
+}
+
+@media screen and ( max-width: 782px ) {
+    .hdiscount-modal {
+        padding: 10px;
+    }
+
+    .hdiscount-modal__box {
+        max-height: 92vh;
+    }
+
+    .hdiscount-about-grid {
+        grid-template-columns: 1fr;
+    }
+}

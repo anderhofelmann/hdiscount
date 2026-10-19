@@ -7,7 +7,7 @@ require_once __DIR__ . '/wp-mock.php';
 
 define( 'HDISCOUNT_PLUGIN_PATH', __DIR__ . '/../hdiscount/' );
 define( 'HDISCOUNT_PLUGIN_URL', 'https://exemplo.test/' );
-define( 'HDISCOUNT_VERSION', '1.5.1' );
+define( 'HDISCOUNT_VERSION', '1.6.0' );
 define( 'MINUTE_IN_SECONDS', 60 );
 
 $fails = 0;
@@ -155,7 +155,7 @@ echo "\n[3] Metodos chamados precisam existir\n";
 // e a suite nao dispara o hook 'init' que registraria o CPT.
 $srcAdmin = file_get_contents( HDISCOUNT_PLUGIN_PATH . 'includes/class-hdiscount-admin.php' );
 
-foreach ( array( 'menu_icon', 'register_cpt', 'render_about_page', 'register_about_page' ) as $metodo ) {
+foreach ( array( 'menu_icon', 'register_cpt', 'render_about_button', 'render_about_modal', 'add_plugin_row_link' ) as $metodo ) {
     check( "HDiscount_Admin::$metodo existe", 1,
         preg_match( '/function\s+' . preg_quote( $metodo, '/' ) . '\s*\(/', $srcAdmin ) ? 1 : 0 );
 }

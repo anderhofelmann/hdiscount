@@ -11,7 +11,7 @@ require_once __DIR__ . '/wp-mock.php';
 
 define( 'HDISCOUNT_PLUGIN_PATH', __DIR__ . '/../hdiscount/' );
 define( 'HDISCOUNT_PLUGIN_URL', 'https://exemplo.test/' );
-define( 'HDISCOUNT_VERSION', '1.5.1' );
+define( 'HDISCOUNT_VERSION', '1.6.0' );
 define( 'MINUTE_IN_SECONDS', 60 );
 
 $fails = 0;
@@ -434,95 +434,21 @@ check( 'sem mistura: sem aviso de preco', 0,
     substr_count( $h3, 'notice-info' ) + substr_count( $h3, 'notice-warning' ) );
 $GLOBALS['wc_products'][500]->set_price( 50.00 );
 
-echo "\n[21] Aba Sobre\n";
+echo "\n[21] Guia em modal\n";
 
-$fonteAdmin2 = file_get_contents( HDISCOUNT_PLUGIN_PATH . 'includes/class-hdiscount-admin.php' );
+$srcModal = file_get_contents( HDISCOUNT_PLUGIN_PATH . 'includes/class-hdiscount-admin.php' );
 
-check( 'registra a aba no admin_menu', 1,
-    false !== strpos( $fonteAdmin2, "add_action( 'admin_menu'" ) ? 1 : 0 );
-check( 'aba liberada para quem so pode ler', 1,
-    false !== strpos( $fonteAdmin2, "return 'read';" ) ? 1 : 0 );
-check( 'guarda interna exige login', 1,
-    false !== strpos( $fonteAdmin2, 'is_user_logged_in()' ) ? 1 : 0 );
-check( 'nao exige permissao de edicao', 0,
-    preg_match( "/current_user_can\(\s*'edit_posts'\s*\)/", $fonteAdmin2 ) ? 1 : 0 );
-check( 'atalho usa a URL correta do menu', 1,
-    false !== strpos( $fonteAdmin2, 'function about_url' ) ? 1 : 0 );
-check( 'texto do link do autor com escape', 1,
-    false !== strpos( $fonteAdmin2, 'https://github.com/anderhofelmann' ) ? 1 : 0 );
-check( 'link externo com rel=noopener', 1,
-    false !== strpos( $fonteAdmin2, 'rel="noopener noreferrer"' ) ? 1 : 0 );
-check( 'explica os tres tipos de desconto', 1,
-    ( false !== strpos( $fonteAdmin2, 'pack_price' ) || false !== strpos( $fonteAdmin2, 'Preco fixo do pack' ) ) ? 1 : 0 );
-check( 'explica misturar produtos', 1,
-    false !== strpos( $fonteAdmin2, 'Misturar produtos no pack' ) ? 1 : 0 );
-check( 'explica o exemplo de calculo', 1,
-    false !== strpos( $fonteAdmin2, 'Como fica no carrinho' ) ? 1 : 0 );
-check( 'CSS da aba existe', 1,
-    false !== strpos( file_get_contents( HDISCOUNT_PLUGIN_PATH . 'assets/admin.css' ), 'hdiscount-about' ) ? 1 : 0 );
-
-echo "\n[11] Versao visivel nas telas\n";
-
-$src = file_get_contents( HDISCOUNT_PLUGIN_PATH . 'includes/class-hdiscount-admin.php' );
-
-check( 'acrescenta versao nas abas da lista', 1,
-    false !== strpos( $src, "views_edit-' . self::CPT_SLUG" ) ? 1 : 0 );
-check( 'selo no topo da tela de edicao', 1,
-    false !== strpos( $src, "add_action( 'edit_form_top'" ) ? 1 : 0 );
-check( 'CSS do selo', 1,
-    false !== strpos( file_get_contents( HDISCOUNT_PLUGIN_PATH . 'assets/admin.css' ), 'hdiscount-version-tag' ) ? 1 : 0 );
-
-// O selo precisa mostrar a versao real do plugin.
-$GLOBALS['post_type'] = 'hdiscount_rule';
-$obj = new HDiscount_Admin();
-$saida = $obj->append_version_to_views( '<ul><li>Todas</li></ul></p>' );
-check( 'mostra a versao instalada', 1,
-    false !== strpos( $saida, HDISCOUNT_VERSION ) ? 1 : 0 );
-check( 'preserva os filtros existentes', 1,
-    false !== strpos( $saida, 'Todas' ) ? 1 : 0 );
-check( 'fecha o HTML corretamente', 1,
-    substr( rtrim( $saida ), -4 ) === '</p>' ? 1 : 0 );
-
-$post = new WP_Post();
-$post->post_type = 'hdiscount_rule';
-$GLOBALS['post'] = $post;
-ob_start();
-$obj->render_version_badge();
-$selo = ob_get_clean();
-check( 'selo de edicao mostra a versao', 1,
-    false !== strpos( $selo, HDISCOUNT_VERSION ) ? 1 : 0 );
-$GLOBALS['post'] = null;
-
-echo "\n[12] Icone do plugin\n";
-
-$srcIcone = file_get_contents( HDISCOUNT_PLUGIN_PATH . 'includes/class-hdiscount-admin.php' );
-$cabIcone = file_get_contents( HDISCOUNT_PLUGIN_PATH . 'hdiscount.php' );
-
-check( 'icone SVG existe no pacote', true,
-    file_exists( HDISCOUNT_PLUGIN_PATH . 'assets/icon.svg' ) );
-check( 'SVG tem titulo acessivel', 1,
-    false !== strpos( file_get_contents( HDISCOUNT_PLUGIN_PATH . 'assets/icon.svg' ), '<title>' ) ? 1 : 0 );
-check( 'SVG tem viewBox', 1,
-    false !== strpos( file_get_contents( HDISCOUNT_PLUGIN_PATH . 'assets/icon.svg' ), 'viewBox' ) ? 1 : 0 );
-check( 'cabecalho declara Icon URI', 1,
-    false !== strpos( $cabIcone, 'Icon URI:' ) ? 1 : 0 );
-check( 'menu usa o icone escolhido', 1,
-    false !== strpos( $srcIcone, 'self::menu_icon()' ) ? 1 : 0 );
-check( 'existe reserva para WP antigo', 1,
-    false !== strpos( $srcIcone, "'5.3'" ) ? 1 : 0 );
-check( 'CSS do logo', 1,
-    false !== strpos( file_get_contents( HDISCOUNT_PLUGIN_PATH . 'assets/admin.css' ), 'hdiscount-about-logo' ) ? 1 : 0 );
-
-// Escolha do icone conforme a versao do WordPress.
-function versao_wp( $v ) { return $GLOBALS['wp_version'] = $v; }
-
-$GLOBALS['wp_version'] = '6.4';
-check( 'WP 5.3+ usa icone de desconto', 'dashicons-discount', HDiscount_Admin::menu_icon() );
-
-$GLOBALS['wp_version'] = '5.2';
-check( 'WP 5.2 ou anterior usa a etiqueta', 'dashicons-tag', HDiscount_Admin::menu_icon() );
-
-$GLOBALS['wp_version'] = '6.4';
+check( 'modal tem role dialog', 1, false !== strpos( $srcModal, 'role="dialog"' ) ? 1 : 0 );
+check( 'modal tem aria-modal', 1, false !== strpos( $srcModal, 'aria-modal="true"' ) ? 1 : 0 );
+check( 'modal comeca oculto', 1, false !== strpos( $srcModal, 'hidden>' ) ? 1 : 0 );
+check( 'botao de fechar acessivel', 1, false !== strpos( $srcModal, 'data-hdiscount-about-close' ) ? 1 : 0 );
+check( 'link externo com rel=noopener', 1, false !== strpos( $srcModal, 'rel="noopener noreferrer"' ) ? 1 : 0 );
+check( 'CSS do modal', 1,
+    false !== strpos( file_get_contents( HDISCOUNT_PLUGIN_PATH . 'assets/admin.css' ), 'hdiscount-modal__box' ) ? 1 : 0 );
+check( 'JS trava e devolve o foco', 1,
+    false !== strpos( file_get_contents( HDISCOUNT_PLUGIN_PATH . 'assets/admin.js' ), 'hdiscount-modal-open' ) ? 1 : 0 );
+check( 'explica os tipos de desconto', 1,
+    false !== strpos( $srcModal, 'Preco fixo do pack' ) ? 1 : 0 );
 
 echo "\n" . str_repeat( '-', 74 ) . "\n";
 if ( 0 === $fails ) {

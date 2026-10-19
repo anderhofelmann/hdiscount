@@ -7,7 +7,7 @@ Requires PHP: 7.0
 Tested up to: 6.4
 WC requires at least: 3.0
 WC tested up to: 8.0
-Stable tag: 1.5.1
+Stable tag: 1.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,14 @@ Sim, o plugin usa apenas APIs públicas do WooCommerce, compatível com HPOS.
 5. Carrinho mostrando preço promocional
 
 == Changelog ==
+
+= 1.6.0 =
+* O guia do plugin virou um modal, aberto pelo botao "Sobre o HDiscount"
+* Elimina a aba que exigia permissao de edicao e devolvia erro de acesso
+* Botao na lista de regras, no topo da tela de edicao e na linha do plugin
+  na tela Plugins
+* Modal acessivel: foco preso dentro dele, retorno do foco ao fechar,
+  fecha com Esc ou clicando no fundo
 
 = 1.5.1 =
 * Correcao: a aba "Sobre" exigia permissao de edicao e devolvia

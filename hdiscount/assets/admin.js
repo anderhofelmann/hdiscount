@@ -224,3 +224,86 @@ jQuery( document ).ready( function( $ ) {
         }
     } );
 } );
+/**
+ * Modal do guia do HDiscount.
+ *
+ * Acessibilidade:
+ *  - role="dialog" + aria-modal, com rotulo ligado ao titulo;
+ *  - foco vai para o modal ao abrir e volta para o botao ao fechar;
+ *  - Tab circula dentro do modal;
+ *  - Esc e o clique no fundo fecham;
+ *  - a rolagem do fundo fica travada enquanto o modal esta aberto.
+ */
+jQuery( document ).ready( function( $ ) {
+    'use strict';
+
+    var $modal = $( '#hdiscount-about-modal' );
+
+    if ( ! $modal.length ) {
+        return;
+    }
+
+    var $fundo   = $( 'body' );
+    var $gatilho = null;
+    var FOCAVEIS = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+    function abrir( event ) {
+        $gatilho = $( event.currentTarget );
+
+        $modal.prop( 'hidden', false );
+        $fundo.addClass( 'hdiscount-modal-open' );
+
+        var $primeiro = $modal.find( FOCAVEIS ).filter( ':visible' ).first();
+        if ( $primeiro.length ) {
+            $primeiro.trigger( 'focus' );
+        } else {
+            $modal.find( '.hdiscount-modal__box' ).attr( 'tabindex', '-1' ).trigger( 'focus' );
+        }
+    }
+
+    function fechar() {
+        $modal.prop( 'hidden', true );
+        $fundo.removeClass( 'hdiscount-modal-open' );
+
+        if ( $gatilho && $gatilho.length ) {
+            $gatilho.trigger( 'focus' );
+        }
+        $gatilho = null;
+    }
+
+    // Abre pelo botao (delegado: funciona tambem em conteúdo ajax).
+    $( document ).on( 'click', '[data-hdiscount-about]', abrir );
+
+    // Fecha por clique no X ou no fundo.
+    $( document ).on( 'click', '[data-hdiscount-about-close]', fechar );
+
+    // Esc fecha.
+    $( document ).on( 'keyup', function( e ) {
+        if ( 27 === e.key && ! $modal.prop( 'hidden' ) ) {
+            fechar();
+        }
+    } );
+
+    // Mantem o foco dentro do modal enquanto ele estiver aberto.
+    $( document ).on( 'keydown', function( e ) {
+        if ( 9 !== e.key || $modal.prop( 'hidden' ) ) {
+            return;
+        }
+
+        var $itens = $modal.find( FOCAVEIS ).filter( ':visible' );
+        if ( ! $itens.length ) {
+            return;
+        }
+
+        var primeiro = $itens.first()[0];
+        var ultimo   = $itens.last()[0];
+
+        if ( e.shiftKey && document.activeElement === primeiro ) {
+            e.preventDefault();
+            ultimo.focus();
+        } else if ( ! e.shiftKey && document.activeElement === ultimo ) {
+            e.preventDefault();
+            primeiro.focus();
+        }
+    } );
+} );

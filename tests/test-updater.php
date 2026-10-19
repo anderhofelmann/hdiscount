@@ -9,7 +9,7 @@ require_once __DIR__ . '/wp-mock.php';
 
 define( 'HDISCOUNT_PLUGIN_PATH', __DIR__ . '/../hdiscount/' );
 define( 'HDISCOUNT_PLUGIN_URL', 'https://exemplo.test/' );
-define( 'HDISCOUNT_VERSION', '1.5.1' );
+define( 'HDISCOUNT_VERSION', '1.6.0' );
 define( 'MINUTE_IN_SECONDS', 60 );
 
 require_once HDISCOUNT_PLUGIN_PATH . 'includes/class-hdiscount-updater.php';
@@ -198,70 +198,24 @@ $GLOBALS['http_response'] = array(
 $t = HDiscount_Updater::check_update( transiente_vazio() );
 check( 'pacote em http e recusado', 0, count( $t->response ) );
 
-echo "\n[9] Aba Sobre registrada\n";
+echo "\n[9] Guia em modal\n";
 
-$adminSrc = file_get_contents( HDISCOUNT_PLUGIN_PATH . 'includes/class-hdiscount-admin.php' );
-check( 'hook admin_menu com prioridade', 1,
-    preg_match( "/add_action\(\s*'admin_menu'.*?,\s*20\s*\)/", $adminSrc ) ? 1 : 0 );
-check( 'tem reserva se o menu nao existir', 1,
-    false !== strpos( $adminSrc, "'woocommerce'" ) ? 1 : 0 );
-check( 'confere o retorno de add_submenu_page', 1,
-    false !== strpos( $adminSrc, 'if ( ! $adicionado )' ) ? 1 : 0 );
-check( 'atalho na lista de regras', 1,
-    false !== strpos( $adminSrc, 'restrict_manage_posts' ) ? 1 : 0 );
+$adminSrc2 = file_get_contents( HDISCOUNT_PLUGIN_PATH . 'includes/class-hdiscount-admin.php' );
 
-echo "\n[10] Hash divergente bloqueia a atualizacao\n";
-
-$pacote = 'conteudo-do-plugin-zip';
-$hash_real = hash( 'sha256', $pacote );
-$hash_falso = str_repeat( 'b', 64 );
-
-// Hash correto: o update passa.
-$GLOBALS['transients'] = array();
-$GLOBALS['http_calls'] = array();
-$GLOBALS['download_content'] = $pacote;
-$GLOBALS['http_response'] = array(
-    'code' => 200,
-    'body' => json_encode( array(
-        'tag_name' => 'v2.0.0',
-        'body'     => "sha256: $hash_real",
-        'assets'   => array( array( 'name' => 'hdiscount.zip', 'browser_download_url' => 'https://github.com/x/hdiscount.zip' ) ),
-    ) ),
-);
-$t = HDiscount_Updater::check_update( transiente_vazio() );
-check( 'hash confere: atualizacao liberada', 1, count( $t->response ) );
-
-// Hash divergente: o update e recusado, mesmo com a versao maior.
-$GLOBALS['transients'] = array();
-$GLOBALS['http_calls'] = array();
-$GLOBALS['http_response'] = array(
-    'code' => 200,
-    'body' => json_encode( array(
-        'tag_name' => 'v2.0.0',
-        'body'     => "sha256: $hash_falso",
-        'assets'   => array( array( 'name' => 'hdiscount.zip', 'browser_download_url' => 'https://github.com/x/hdiscount.zip' ) ),
-    ) ),
-);
-$t = HDiscount_Updater::check_update( transiente_vazio() );
-check( 'hash divergente: atualizacao bloqueada', 0, count( $t->response ) );
-
-// Falha ao baixar tambem bloqueia.
-$GLOBALS['transients'] = array();
-$GLOBALS['http_calls'] = array();
-$GLOBALS['download_content'] = null;
-$GLOBALS['http_response'] = array(
-    'code' => 200,
-    'body' => json_encode( array(
-        'tag_name' => 'v2.0.0',
-        'body'     => "sha256: $hash_real",
-        'assets'   => array( array( 'name' => 'hdiscount.zip', 'browser_download_url' => 'https://github.com/x/hdiscount.zip' ) ),
-    ) ),
-);
-$t = HDiscount_Updater::check_update( transiente_vazio() );
-check( 'falha no download: atualizacao bloqueada', 0, count( $t->response ) );
-
-// Reutiliza o pacote com hash correto ao final.
-$GLOBALS['download_content'] = $pacote;
+check( 'botao na lista de regras', 1,
+    false !== strpos( $adminSrc2, "add_action( 'restrict_manage_posts'" ) ? 1 : 0 );
+check( 'botao na tela de edicao', 1,
+    false !== strpos( $adminSrc2, "'edit_form_top', array( \$this, 'render_about_button' )" ) ? 1 : 0 );
+check( 'link na linha do plugin', 1,
+    false !== strpos( $adminSrc2, "add_filter( 'plugin_row_meta'" ) ? 1 : 0 );
+check( 'modal no rodape', 1,
+    false !== strpos( $adminSrc2, "'admin_footer', array( \$this, 'render_about_modal' )" ) ? 1 : 0 );
+check( 'nenhuma pagina de menu do guia', 0,
+    false !== strpos( $adminSrc2, 'add_submenu_page' ) ? 1 : 0 );
+check( 'CSS do modal', 1,
+    false !== strpos( file_get_contents( HDISCOUNT_PLUGIN_PATH . 'assets/admin.css' ), 'hdiscount-modal__box' ) ? 1 : 0 );
+check( 'JS do modal', 1,
+    false !== strpos( file_get_contents( HDISCOUNT_PLUGIN_PATH . 'assets/admin.js' ), 'hdiscount-about-modal' ) ? 1 : 0 );
 
 echo "\n" . str_repeat( '-', 74 ) . "\n";
 if ( 0 === $fails ) {

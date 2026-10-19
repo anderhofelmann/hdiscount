@@ -35,9 +35,16 @@ class HDiscount_Admin {
         // Atalho de volta para a lista, dentro da caixa "Publicar".
         add_filter( 'post_submitbox_misc_actions', array( $this, 'render_back_link' ) );
 
-        // Aba "Sobre" com o guia de uso.
-        // Prioridade 20: o menu do CPT ja esta registrado.
-        add_action( 'admin_menu', array( $this, 'register_about_page' ), 20 );
+        // Guia do plugin em modal, nas telas onde o plugin aparece.
+        add_action( 'restrict_manage_posts', array( $this, 'render_about_button' ) );
+        add_action( 'edit_form_top', array( $this, 'render_about_button' ) );
+        add_filter( 'plugin_row_meta', array( $this, 'add_plugin_row_link' ), 10, 2 );
+
+        // Versao visivel e conteudo do modal, uma vez por tela.
+        add_filter( 'views_edit-' . self::CPT_SLUG, array( $this, 'append_version_to_views' ) );
+        add_action( 'edit_form_top', array( $this, 'render_version_badge' ), 5 );
+        add_action( 'admin_footer', array( $this, 'render_about_modal' ) );
+
         add_action( 'save_post', array( $this, 'save_meta_box_data' ), 10, 2 );
         add_filter( 'manage_edit-' . self::CPT_SLUG . '_columns', array( $this, 'set_custom_columns' ) );
         add_action( 'manage_' . self::CPT_SLUG . '_posts_custom_column', array( $this, 'render_custom_columns' ), 10, 2 );
@@ -45,8 +52,14 @@ class HDiscount_Admin {
     }
 
     /**
-     * Registra o Custom Post Type "Regra de Desconto"
+     * Versao atual do plugin, lida da constante do bootstrap.
+     *
+     * @return string
      */
+    public static function get_version() {
+        return defined( 'HDISCOUNT_VERSION' ) ? HDISCOUNT_VERSION : '0.0.0';
+    }
+
     /**
      * Escolhe o icone de menu mais adequado a versao do WordPress.
      *
@@ -107,54 +120,39 @@ class HDiscount_Admin {
     }
 
     /**
-     * Registra a aba "Sobre" dentro do menu do HDiscount.
+     * Botao que abre o guia do plugin em modal.
      *
-     * Roda com prioridade alta para garantir que o menu do tipo de post ja
-     * foi criado. Se o menu nao existir (outro plugin removeu, ou mudanca de
-     * configuracao), a pagina e presa ao menu do WooCommerce.
+     * Aparece na lista de regras e no topo da tela de edicao. Um modal
+     * dispensa uma pagina separada: nao depende de permissao nem de URL
+     * propria, e o conteudo fica onde o usuario ja esta trabalhando.
      */
-    public function register_about_page() {
-        $pai = 'edit.php?post_type=' . self::CPT_SLUG;
+    public function render_about_button() {
+        printf(
+            '<button type="button" class="button hdiscount-about-trigger" data-hdiscount-about="1">%s</button>',
+            esc_html__( 'Sobre o HDiscount', 'hdiscount' )
+        );
+    }
 
-        // "read" e o unico papel que todo usuario do painel tem. A aba traz
-        // apenas documentacao do plugin, nao dados da loja, entao nao ha
-        // motivo para exigir permissao de edicao - que impede, por exemplo,
-        // quem visualize a loja sem poder editar posts.
-        $capacidade = self::about_capability();
+    /**
+     * Link "Sobre" na linha do plugin, na tela Plugins do WordPress.
+     *
+     * @param array  $links
+     * @param string $plugin_file
+     * @return array
+     */
+    public function add_plugin_row_link( $links, $plugin_file ) {
+        if ( 'hdiscount/hdiscount.php' !== $plugin_file ) {
+            return $links;
+        }
 
-        $adicionado = add_submenu_page(
-            $pai,
-            __( 'Sobre o HDiscount', 'hdiscount' ),
-            __( 'Sobre', 'hdiscount' ),
-            $capacidade,
-            self::CPT_SLUG . '_about',
-            array( $this, 'render_about_page' )
+        $links[] = sprintf(
+            '<button type="button" class="hdiscount-about-trigger hdiscount-about-trigger--inline" data-hdiscount-about="1">%s</button>',
+            esc_html__( 'Sobre', 'hdiscount' )
         );
 
-        if ( $adicionado ) {
-            self::$about_parent = $pai;
-        }
-
-        // Sem o menu do CPT, tenta sob o WooCommerce.
-        if ( ! $adicionado ) {
-            self::$about_parent = 'woocommerce';
-            add_submenu_page(
-                'woocommerce',
-                __( 'Sobre o HDiscount', 'hdiscount' ),
-                __( 'HDiscount: Sobre', 'hdiscount' ),
-                $capacidade,
-                self::CPT_SLUG . '_about',
-                array( $this, 'render_about_page' )
-            );
-        }
-
-        // Atalho direto na lista de regras, util em telas estreitas.
-        add_action( 'restrict_manage_posts', array( $this, 'render_about_shortcut' ) );
-
-        // Versao visivel nas telas do plugin.
-        add_filter( 'views_edit-' . self::CPT_SLUG, array( $this, 'append_version_to_views' ) );
-        add_action( 'edit_form_top', array( $this, 'render_version_badge' ) );
+        return $links;
     }
+
 
     /**
      * Acrescenta a versao no rodape das abas do plugin.
@@ -198,72 +196,43 @@ class HDiscount_Admin {
     }
 
     /**
-     * URL da aba "Sobre", conforme o menu onde ela foi registrada.
+     * Conteudo do guia, exibido em modal.
      *
-     * @return string
+     * Fica no rodape do painel e so aparece quando o usuario clica no botao.
      */
-    public static function about_url() {
-        if ( 'woocommerce' === self::$about_parent ) {
-            return add_query_arg(
-                array( 'page' => self::CPT_SLUG . '_about' ),
-                admin_url( 'admin.php' )
-            );
-        }
+    public function render_about_modal() {
+        $screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
 
-        return add_query_arg(
-            array( 'post_type' => self::CPT_SLUG, 'page' => self::CPT_SLUG . '_about' ),
-            admin_url( 'edit.php' )
-        );
-    }
-
-    /**
-     * Versao atual, lida da constante do bootstrap.
-     *
-     * @return string
-     */
-    public static function get_version() {
-        return defined( 'HDISCOUNT_VERSION' ) ? HDISCOUNT_VERSION : '0.0.0';
-    }
-
-    /**
-     * Link para a aba "Sobre" no topo da lista de regras.
-     */
-    public function render_about_shortcut() {
-        global $typenow;
-
-        if ( self::CPT_SLUG !== $typenow ) {
+        // So nas telas onde existe um botao que abre o guia.
+        if ( ! $screen ) {
             return;
         }
 
-        printf(
-            '<p class="hdiscount-about-shortcut"><a href="%s">%s</a> &mdash; %s</p>',
-            esc_url( self::about_url() ),
-            esc_html__( 'Sobre o HDiscount', 'hdiscount' ),
-            esc_html__( 'veja como criar sua primeira regra em 3 passos', 'hdiscount' )
-        );
-    }
-
-    /**
-     * Permissao necessaria para ver a aba "Sobre".
-     *
-     * @return string
-     */
-    public static function about_capability() {
-        return 'read';
-    }
-
-    /**
-     * Conteudo da aba "Sobre": explica o plugin antes da primeira regra.
-     */
-    public function render_about_page() {
-        // Guarda final: nunca exibe a tela fora do painel.
-        if ( ! is_user_logged_in() ) {
-            wp_die( esc_html__( 'Faca login para ver esta pagina.', 'hdiscount' ) );
+        $telas = array( 'plugins', 'edit-hdiscount_rule', 'hdiscount_rule' );
+        if ( ! in_array( (string) $screen->id, $telas, true ) ) {
+            return;
         }
 
-        $versao = defined( 'HDISCOUNT_VERSION' ) ? HDISCOUNT_VERSION : '';
+        $versao = self::get_version();
         ?>
-        <div class="wrap about-wrap hdiscount-about">
+        <div class="hdiscount-modal" id="hdiscount-about-modal" role="dialog" aria-modal="true"
+             aria-labelledby="hdiscount-about-title" hidden>
+            <div class="hdiscount-modal__backdrop" data-hdiscount-about-close="1"></div>
+            <div class="hdiscount-modal__box" role="document">
+                <div class="hdiscount-modal__header">
+                    <h2 id="hdiscount-about-title">
+                        <img class="hdiscount-about-logo"
+                             src="<?php echo esc_url( HDISCOUNT_PLUGIN_URL . 'assets/icon.svg' ); ?>"
+                             alt="" width="32" height="32" />
+                        <?php esc_html_e( 'HDiscount', 'hdiscount' ); ?>
+                        <span class="hdiscount-modal__version"><?php echo esc_html( $versao ); ?></span>
+                    </h2>
+                    <button type="button" class="hdiscount-modal__close"
+                            data-hdiscount-about-close="1" aria-label="<?php esc_attr_e( 'Fechar', 'hdiscount' ); ?>">&times;</button>
+                </div>
+
+                <div class="hdiscount-modal__body">
+                <div class="hdiscount-about">
 
             <h1>
                 <img class="hdiscount-about-logo"
@@ -370,6 +339,15 @@ class HDiscount_Admin {
                 ?>
             </p>
 
+                </div>
+                </div>
+
+                <div class="hdiscount-modal__footer">
+                    <a href="https://github.com/anderhofelmann/hdiscount" target="_blank" rel="noopener noreferrer">
+                        <?php esc_html_e( 'Documentacao no GitHub', 'hdiscount' ); ?>
+                    </a>
+                </div>
+            </div>
         </div>
         <?php
     }

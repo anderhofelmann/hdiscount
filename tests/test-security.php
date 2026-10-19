@@ -10,7 +10,7 @@ require_once __DIR__ . '/wp-mock.php';
 
 define( 'HDISCOUNT_PLUGIN_PATH', __DIR__ . '/../hdiscount/' );
 define( 'HDISCOUNT_PLUGIN_URL', 'https://exemplo.test/' );
-define( 'HDISCOUNT_VERSION', '1.5.1' );
+define( 'HDISCOUNT_VERSION', '1.6.0' );
 define( 'MINUTE_IN_SECONDS', 60 );
 define( 'HOUR_IN_SECONDS', 3600 );
 
@@ -142,13 +142,19 @@ check( 'timeout curto na requisicao', 1,
 
 echo "\n[8] Exposicao de dados\n";
 
-// A aba Sobre e documentacao, nao dado de loja: nao pode exigir permissao
-// de edicao, ou quem so visualiza o painel fica de fora.
+// O guia virou modal: ele aparece dentro de telas que o usuario ja acessa,
+// entao nao cria uma pagina nova nem exige permissao de edicao.
 $adminSrc = fonte( 'includes/class-hdiscount-admin.php' );
-check( 'aba Sobre nao exige permissao de edicao', 0,
+check( 'modal nao cria pagina de menu', 0,
+    false !== strpos( $adminSrc, 'add_submenu_page' ) ? 1 : 0 );
+check( 'modal nao exige permissao de edicao', 0,
     preg_match( "/current_user_can\(\s*'edit_posts'\s*\)/", $adminSrc ) ? 1 : 0 );
-check( 'aba Sobre exige login', 1,
-    false !== strpos( $adminSrc, 'is_user_logged_in()' ) ? 1 : 0 );
+check( 'modal tem role dialog', 1,
+    false !== strpos( $adminSrc, 'role="dialog"' ) ? 1 : 0 );
+check( 'modal tem aria-modal', 1,
+    false !== strpos( $adminSrc, 'aria-modal="true"' ) ? 1 : 0 );
+check( 'modal tem rotulo acessivel', 1,
+    false !== strpos( $adminSrc, 'aria-labelledby' ) ? 1 : 0 );
 
 check( 'CPT nao exposto via REST', 1,
     preg_match( "/'show_in_rest'\s*=>\s*false/", fonte( 'hdiscount.php' ) ) ? 1 : 0 );
