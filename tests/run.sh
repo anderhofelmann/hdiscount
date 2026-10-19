@@ -35,7 +35,7 @@ while IFS= read -r linha; do
     echo "  FALHA  $linha"
     ACHADO=1
     FALHAS=$((FALHAS+1))
-done < <(grep -rnE '\?\?=|str_contains|str_starts_with|str_ends_with|match[[:space:]]*\(|fn[[:space:]]*\(|readonly|public (int|string|bool|float) \$' \
+done < <(grep -rnE '\?\?=|\bstr_contains\b|\bstr_starts_with\b|\bstr_ends_with\b|\bmatch[[:space:]]*\(|\bfn[[:space:]]*\(|\breadonly\b|public (int|string|bool|float) \$' \
     --include='*.php' "$PLUGIN" 2>/dev/null)
 [ $ACHADO -eq 0 ] && echo "  ok     nenhuma sintaxe exclusiva do PHP 8"
 echo

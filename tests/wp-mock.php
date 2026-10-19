@@ -164,6 +164,13 @@ class WP_Error {
     public function __construct( $c = '', $m = '' ) { $this->code = $c; $this->message = $m; }
     public function get_error_message() { return $this->message; }
 }
+function download_url( $u, $t = 60 ) {
+    $destino = sys_get_temp_dir() . '/hd-test-' . md5( $u ) . '.zip';
+    $conteudo = $GLOBALS['download_content'] ?? null;
+    if ( $conteudo === null ) { return new WP_Error( 'download_failed', 'sem conteudo no teste' ); }
+    file_put_contents( $destino, $conteudo );
+    return $destino;
+}
 function home_url( $p = '' ) { return 'https://exemplo.test'; }
 function wp_kses_post( $t ) { return $t; }
 function wp_list_pluck( $lista, $campo ) {

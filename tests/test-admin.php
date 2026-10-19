@@ -11,7 +11,7 @@ require_once __DIR__ . '/wp-mock.php';
 
 define( 'HDISCOUNT_PLUGIN_PATH', __DIR__ . '/../hdiscount/' );
 define( 'HDISCOUNT_PLUGIN_URL', 'https://exemplo.test/' );
-define( 'HDISCOUNT_VERSION', '1.4.0' );
+define( 'HDISCOUNT_VERSION', '1.4.2' );
 define( 'MINUTE_IN_SECONDS', 60 );
 
 $fails = 0;
@@ -454,6 +454,38 @@ check( 'explica o exemplo de calculo', 1,
     false !== strpos( $fonteAdmin2, 'Como fica no carrinho' ) ? 1 : 0 );
 check( 'CSS da aba existe', 1,
     false !== strpos( file_get_contents( HDISCOUNT_PLUGIN_PATH . 'assets/admin.css' ), 'hdiscount-about' ) ? 1 : 0 );
+
+echo "\n[11] Versao visivel nas telas\n";
+
+$src = file_get_contents( HDISCOUNT_PLUGIN_PATH . 'includes/class-hdiscount-admin.php' );
+
+check( 'acrescenta versao nas abas da lista', 1,
+    false !== strpos( $src, "views_edit-' . self::CPT_SLUG" ) ? 1 : 0 );
+check( 'selo no topo da tela de edicao', 1,
+    false !== strpos( $src, "add_action( 'edit_form_top'" ) ? 1 : 0 );
+check( 'CSS do selo', 1,
+    false !== strpos( file_get_contents( HDISCOUNT_PLUGIN_PATH . 'assets/admin.css' ), 'hdiscount-version-tag' ) ? 1 : 0 );
+
+// O selo precisa mostrar a versao real do plugin.
+$GLOBALS['post_type'] = 'hdiscount_rule';
+$obj = new HDiscount_Admin();
+$saida = $obj->append_version_to_views( '<ul><li>Todas</li></ul></p>' );
+check( 'mostra a versao instalada', 1,
+    false !== strpos( $saida, HDISCOUNT_VERSION ) ? 1 : 0 );
+check( 'preserva os filtros existentes', 1,
+    false !== strpos( $saida, 'Todas' ) ? 1 : 0 );
+check( 'fecha o HTML corretamente', 1,
+    substr( rtrim( $saida ), -4 ) === '</p>' ? 1 : 0 );
+
+$post = new WP_Post();
+$post->post_type = 'hdiscount_rule';
+$GLOBALS['post'] = $post;
+ob_start();
+$obj->render_version_badge();
+$selo = ob_get_clean();
+check( 'selo de edicao mostra a versao', 1,
+    false !== strpos( $selo, HDISCOUNT_VERSION ) ? 1 : 0 );
+$GLOBALS['post'] = null;
 
 echo "\n" . str_repeat( '-', 74 ) . "\n";
 if ( 0 === $fails ) {

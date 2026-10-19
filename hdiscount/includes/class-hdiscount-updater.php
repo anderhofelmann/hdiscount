@@ -89,6 +89,18 @@ class HDiscount_Updater {
             return $transient;
         }
 
+        // O pacote precisa ser https: um espelho em http permitiria alterar
+        // o arquivo no caminho.
+        if ( 0 !== stripos( (string) $release['package'], 'https://' ) ) {
+            return $transient;
+        }
+
+        // O hash publicado precisa bater com o arquivo que o GitHub
+        // informa. Divergencia significa arquivo trocado no caminho.
+        if ( ! self::hash_matches_release( $release ) ) {
+            return $transient;
+        }
+
         $transient->response[ self::PLUGIN_FILE ] = self::build_update_object( $release );
 
         return $transient;
@@ -246,7 +258,64 @@ class HDiscount_Updater {
             'package'   => $pacote,
             'url'       => isset( $corpo['html_url'] ) ? $corpo['html_url'] : '',
             'changelog' => isset( $corpo['body'] ) ? wp_kses_post( $corpo['body'] ) : '',
+            // Hash publicado na propria release: protege contra arquivo
+            // corrompido ou substituido no caminho.
+            'sha256'    => self::extract_sha256( isset( $corpo['body'] ) ? $corpo['body'] : '' ),
         );
+    }
+
+    /**
+     * Confere o hash do pacote com o publicado na release.
+     *
+     * Sem hash publicado, a atualizacao segue (repositorios antigos nao tem).
+     * Com hash, ele precisa bater: caso contrario o update e recusado.
+     *
+     * @param array $release
+     * @return bool
+     */
+    private static function hash_matches_release( $release ) {
+        $esperado = isset( $release['sha256'] ) ? $release['sha256'] : '';
+
+        // Release sem hash: nao ha como conferir, aceita.
+        if ( '' === $esperado ) {
+            return true;
+        }
+
+        $arquivo = download_url( $release['package'], 30 );
+
+        if ( is_wp_error( $arquivo ) || ! $arquivo ) {
+            return false;
+        }
+
+        $hash = hash_file( 'sha256', $arquivo );
+
+        // Remove o arquivo temporario.
+        if ( function_exists( 'unlink' ) ) {
+            @unlink( $arquivo );
+        }
+
+        return hash_equals( $esperado, (string) $hash );
+    }
+
+    /**
+     * Extrai o SHA-256 publicado no corpo da release.
+     *
+     * O autor publica no topo da release:
+     *     sha256: 3f7a...  (ou "SHA256: 3f7a...")
+     *
+     * @param string $corpo
+     * @return string Hexadecimal de 64 caracteres, ou string vazia.
+     */
+    public static function extract_sha256( $corpo ) {
+        if ( ! is_string( $corpo ) || '' === $corpo ) {
+            return '';
+        }
+
+        if ( preg_match( '/sha-?256\s*[:=]\s*`?([a-f0-9]{64})`?/i', $corpo, $m ) ) {
+            return strtolower( $m[1] );
+        }
+
+        return '';
     }
 
     /**

@@ -9,7 +9,7 @@ require_once __DIR__ . '/wp-mock.php';
 
 define( 'HDISCOUNT_PLUGIN_PATH', __DIR__ . '/../hdiscount/' );
 define( 'HDISCOUNT_PLUGIN_URL', 'https://exemplo.test/' );
-define( 'HDISCOUNT_VERSION', '1.4.0' );
+define( 'HDISCOUNT_VERSION', '1.4.2' );
 define( 'MINUTE_IN_SECONDS', 60 );
 
 require_once HDISCOUNT_PLUGIN_PATH . 'includes/class-hdiscount-updater.php';
@@ -168,6 +168,100 @@ check( 'classe listada no carregamento', 1,
     false !== strpos( $bootstrap, "'HDiscount_Updater'" ) ? 1 : 0 );
 check( 'arquivo existe no plugin', true,
     file_exists( HDISCOUNT_PLUGIN_PATH . 'includes/class-hdiscount-updater.php' ) );
+
+echo "\n[8] Integridade do pacote\n";
+
+$hash = str_repeat( 'a', 64 );
+
+check( 'le sha256: da release',  $hash, HDiscount_Updater::extract_sha256( "sha256: $hash" ) );
+check( 'le SHA256 maiusculo',    $hash, HDiscount_Updater::extract_sha256( "SHA256: $hash" ) );
+check( 'le com crase',           $hash, HDiscount_Updater::extract_sha256( "sha256: `$hash`" ) );
+check( 'ignora hash invalido',   '',    HDiscount_Updater::extract_sha256( 'sha256: abc123' ) );
+check( 'sem hash devolve vazio', '',    HDiscount_Updater::extract_sha256( 'texto sem hash' ) );
+check( 'corpo vazio',            '',    HDiscount_Updater::extract_sha256( '' ) );
+
+// Release sem hash: atualizacao segue (repositorios antigos).
+github( 'v2.0.0' ); limpar();
+$t = HDiscount_Updater::check_update( transiente_vazio() );
+check( 'sem hash: atualizacao liberada', 1, count( $t->response ) );
+
+// Pacote em http e recusado.
+$GLOBALS['transients'] = array();
+$GLOBALS['http_calls'] = array();
+$GLOBALS['http_response'] = array(
+    'code' => 200,
+    'body' => json_encode( array(
+        'tag_name' => 'v2.0.0',
+        'assets'   => array( array( 'name' => 'hdiscount.zip', 'browser_download_url' => 'http://exemplo.test/hdiscount.zip' ) ),
+    ) ),
+);
+$t = HDiscount_Updater::check_update( transiente_vazio() );
+check( 'pacote em http e recusado', 0, count( $t->response ) );
+
+echo "\n[9] Aba Sobre registrada\n";
+
+$adminSrc = file_get_contents( HDISCOUNT_PLUGIN_PATH . 'includes/class-hdiscount-admin.php' );
+check( 'hook admin_menu com prioridade', 1,
+    preg_match( "/add_action\(\s*'admin_menu'.*?,\s*20\s*\)/", $adminSrc ) ? 1 : 0 );
+check( 'tem reserva se o menu nao existir', 1,
+    false !== strpos( $adminSrc, "'woocommerce'" ) ? 1 : 0 );
+check( 'confere o retorno de add_submenu_page', 1,
+    false !== strpos( $adminSrc, 'if ( ! $adicionado )' ) ? 1 : 0 );
+check( 'atalho na lista de regras', 1,
+    false !== strpos( $adminSrc, 'restrict_manage_posts' ) ? 1 : 0 );
+
+echo "\n[10] Hash divergente bloqueia a atualizacao\n";
+
+$pacote = 'conteudo-do-plugin-zip';
+$hash_real = hash( 'sha256', $pacote );
+$hash_falso = str_repeat( 'b', 64 );
+
+// Hash correto: o update passa.
+$GLOBALS['transients'] = array();
+$GLOBALS['http_calls'] = array();
+$GLOBALS['download_content'] = $pacote;
+$GLOBALS['http_response'] = array(
+    'code' => 200,
+    'body' => json_encode( array(
+        'tag_name' => 'v2.0.0',
+        'body'     => "sha256: $hash_real",
+        'assets'   => array( array( 'name' => 'hdiscount.zip', 'browser_download_url' => 'https://github.com/x/hdiscount.zip' ) ),
+    ) ),
+);
+$t = HDiscount_Updater::check_update( transiente_vazio() );
+check( 'hash confere: atualizacao liberada', 1, count( $t->response ) );
+
+// Hash divergente: o update e recusado, mesmo com a versao maior.
+$GLOBALS['transients'] = array();
+$GLOBALS['http_calls'] = array();
+$GLOBALS['http_response'] = array(
+    'code' => 200,
+    'body' => json_encode( array(
+        'tag_name' => 'v2.0.0',
+        'body'     => "sha256: $hash_falso",
+        'assets'   => array( array( 'name' => 'hdiscount.zip', 'browser_download_url' => 'https://github.com/x/hdiscount.zip' ) ),
+    ) ),
+);
+$t = HDiscount_Updater::check_update( transiente_vazio() );
+check( 'hash divergente: atualizacao bloqueada', 0, count( $t->response ) );
+
+// Falha ao baixar tambem bloqueia.
+$GLOBALS['transients'] = array();
+$GLOBALS['http_calls'] = array();
+$GLOBALS['download_content'] = null;
+$GLOBALS['http_response'] = array(
+    'code' => 200,
+    'body' => json_encode( array(
+        'tag_name' => 'v2.0.0',
+        'body'     => "sha256: $hash_real",
+        'assets'   => array( array( 'name' => 'hdiscount.zip', 'browser_download_url' => 'https://github.com/x/hdiscount.zip' ) ),
+    ) ),
+);
+$t = HDiscount_Updater::check_update( transiente_vazio() );
+check( 'falha no download: atualizacao bloqueada', 0, count( $t->response ) );
+
+// Reutiliza o pacote com hash correto ao final.
+$GLOBALS['download_content'] = $pacote;
 
 echo "\n" . str_repeat( '-', 74 ) . "\n";
 if ( 0 === $fails ) {

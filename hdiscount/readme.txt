@@ -7,7 +7,7 @@ Requires PHP: 7.0
 Tested up to: 6.4
 WC requires at least: 3.0
 WC tested up to: 8.0
-Stable tag: 1.4.0
+Stable tag: 1.4.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,18 @@ Sim, o plugin usa apenas APIs públicas do WooCommerce, compatível com HPOS.
 5. Carrinho mostrando preço promocional
 
 == Changelog ==
+
+= 1.4.2 =
+* Versao visivel nas telas do plugin: nas abas da lista de regras e no topo
+  da tela de edicao, para conferir rapidamente qual versao esta instalada
+
+= 1.4.1 =
+* A aba "Sobre" agora tem prioridade correta no menu e, se o menu nao existir,
+  e presa ao menu do WooCommerce
+* Atalho para a aba "Sobre" no topo da lista de regras
+* Atualizador verifica o SHA-256 do pacote contra o hash publicado na release
+  e recusa a instalacao se o arquivo tiver sido alterado
+* Atualizador so aceita pacotes em HTTPS
 
 = 1.4.0 =
 * Nova aba "Sobre" em HDiscount > Sobre, com o guia de uso antes da primeira regra

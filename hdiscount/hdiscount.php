@@ -3,7 +3,7 @@
  * Plugin Name:       HDiscount
  * Plugin URI:        https://github.com/andersonhofelmann/hdiscount
  * Description:       Sistema de regras de desconto por quantidade (packs) para WooCommerce. Permite criar promoções do tipo "Leve X por R$ Y" com controle de período, produtos, variações e limites de quantidade.
- * Version:           1.4.0
+ * Version:           1.4.2
  * Requires at least: 5.0
  * Requires PHP:      7.0
  * Tested up to:      6.4
@@ -40,7 +40,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Versão do plugin
  */
-define( 'HDISCOUNT_VERSION', '1.4.0' );
+define( 'HDISCOUNT_VERSION', '1.4.2' );
 
 /**
  * Caminho do plugin no filesystem

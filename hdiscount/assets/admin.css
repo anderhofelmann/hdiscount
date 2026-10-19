@@ -357,3 +357,30 @@
     margin-top: 16px;
     color: #646970;
 }
+
+/* ---------- Versao do plugin ---------- */
+.hdiscount-version-tag {
+    display: inline-block;
+    margin: 4px 0 0;
+    padding: 3px 10px;
+    background: #f0f0f1;
+    border-radius: 3px;
+    color: #50575e;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .02em;
+}
+
+.hdiscount-version-tag--top {
+    margin: 0 0 12px;
+    background: #2271b1;
+    color: #fff;
+}
+
+.hdiscount-about-shortcut {
+    margin: 6px 0 12px;
+}
+
+.hdiscount-about-shortcut a {
+    font-weight: 600;
+}

@@ -25,7 +25,8 @@ class HDiscount_Admin {
         add_filter( 'post_submitbox_misc_actions', array( $this, 'render_back_link' ) );
 
         // Aba "Sobre" com o guia de uso.
-        add_action( 'admin_menu', array( $this, 'register_about_page' ) );
+        // Prioridade 20: o menu do CPT ja esta registrado.
+        add_action( 'admin_menu', array( $this, 'register_about_page' ), 20 );
         add_action( 'save_post', array( $this, 'save_meta_box_data' ), 10, 2 );
         add_filter( 'manage_edit-' . self::CPT_SLUG . '_columns', array( $this, 'set_custom_columns' ) );
         add_action( 'manage_' . self::CPT_SLUG . '_posts_custom_column', array( $this, 'render_custom_columns' ), 10, 2 );
@@ -74,15 +75,113 @@ class HDiscount_Admin {
 
     /**
      * Registra a aba "Sobre" dentro do menu do HDiscount.
+     *
+     * Roda com prioridade alta para garantir que o menu do tipo de post ja
+     * foi criado. Se o menu nao existir (outro plugin removeu, ou mudanca de
+     * configuracao), a pagina e presa ao menu do WooCommerce.
      */
     public function register_about_page() {
-        add_submenu_page(
-            'edit.php?post_type=' . self::CPT_SLUG,
+        $pai = 'edit.php?post_type=' . self::CPT_SLUG;
+
+        $adicionado = add_submenu_page(
+            $pai,
             __( 'Sobre o HDiscount', 'hdiscount' ),
             __( 'Sobre', 'hdiscount' ),
             'edit_posts',
             self::CPT_SLUG . '_about',
             array( $this, 'render_about_page' )
+        );
+
+        // Sem o menu do CPT, tenta sob o WooCommerce.
+        if ( ! $adicionado ) {
+            add_submenu_page(
+                'woocommerce',
+                __( 'Sobre o HDiscount', 'hdiscount' ),
+                __( 'HDiscount: Sobre', 'hdiscount' ),
+                'edit_posts',
+                self::CPT_SLUG . '_about',
+                array( $this, 'render_about_page' )
+            );
+        }
+
+        // Atalho direto na lista de regras, util em telas estreitas.
+        add_action( 'restrict_manage_posts', array( $this, 'render_about_shortcut' ) );
+
+        // Versao visivel nas telas do plugin.
+        add_filter( 'views_edit-' . self::CPT_SLUG, array( $this, 'append_version_to_views' ) );
+        add_action( 'edit_form_top', array( $this, 'render_version_badge' ) );
+    }
+
+    /**
+     * Acrescenta a versao no rodape das abas do plugin.
+     *
+     * Aparece em "Todas as regras", "Publicadas", "Rascunhos" etc. É o jeito
+     * mais rapido de conferir qual versao esta instalada sem sair da tela.
+     *
+     * @param string $link_html
+     * @return string
+     */
+    public function append_version_to_views( $link_html ) {
+        $link_html = rtrim( (string) $link_html, '</p>' );
+
+        return $link_html . '<p class="hdiscount-version-tag">'
+            . sprintf(
+                /* translators: %s: versao do plugin */
+                esc_html__( 'HDiscount %s', 'hdiscount' ),
+                esc_html( self::get_version() )
+            )
+            . '</p>';
+    }
+
+    /**
+     * Selo de versao no topo da tela de edicao da regra.
+     */
+    public function render_version_badge() {
+        global $post;
+
+        if ( ! $post || self::CPT_SLUG !== $post->post_type ) {
+            return;
+        }
+
+        printf(
+            '<p class="hdiscount-version-tag hdiscount-version-tag--top">%s</p>',
+            sprintf(
+                /* translators: %s: versao do plugin */
+                esc_html__( 'HDiscount %s', 'hdiscount' ),
+                esc_html( self::get_version() )
+            )
+        );
+    }
+
+    /**
+     * Versao atual, lida da constante do bootstrap.
+     *
+     * @return string
+     */
+    public static function get_version() {
+        return defined( 'HDISCOUNT_VERSION' ) ? HDISCOUNT_VERSION : '0.0.0';
+    }
+
+    /**
+     * Link para a aba "Sobre" no topo da lista de regras.
+     */
+    public function render_about_shortcut() {
+        global $typenow;
+
+        if ( self::CPT_SLUG !== $typenow ) {
+            return;
+        }
+
+        printf(
+            '<p class="hdiscount-about-shortcut"><a href="%s">%s</a> &mdash; %s</p>',
+            esc_url(
+                add_query_arg(
+                    array( 'post_type' => self::CPT_SLUG, 'page' => self::CPT_SLUG . '_about' ),
+                    admin_url( 'edit.php' )
+                )
+            ),
+            esc_html__( 'Sobre o HDiscount', 'hdiscount' ),
+            esc_html__( 'veja como criar sua primeira regra em 3 passos', 'hdiscount' )
         );
     }
 
