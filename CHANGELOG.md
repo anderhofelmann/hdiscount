@@ -97,19 +97,19 @@ e o versionamento segue [SemVer](https://semver.org/lang/pt-BR/).
 ## [1.0.0] - 2026-10-18
 
 
-[1.2.6]: https://github.com/SEU-USUARIO/hdiscount/releases/tag/v1.2.6
-[1.2.5]: https://github.com/SEU-USUARIO/hdiscount/releases/tag/v1.2.5
-[1.2.4]: https://github.com/SEU-USUARIO/hdiscount/releases/tag/v1.2.4
-[1.2.3]: https://github.com/SEU-USUARIO/hdiscount/releases/tag/v1.2.3
-[1.2.2]: https://github.com/SEU-USUARIO/hdiscount/releases/tag/v1.2.2
-[1.2.1]: https://github.com/SEU-USUARIO/hdiscount/releases/tag/v1.2.1
-[1.2.0]: https://github.com/SEU-USUARIO/hdiscount/releases/tag/v1.2.0
-[1.1.6]: https://github.com/SEU-USUARIO/hdiscount/releases/tag/v1.1.6
-[1.1.5]: https://github.com/SEU-USUARIO/hdiscount/releases/tag/v1.1.5
-[1.1.4]: https://github.com/SEU-USUARIO/hdiscount/releases/tag/v1.1.4
-[1.1.3]: https://github.com/SEU-USUARIO/hdiscount/releases/tag/v1.1.3
-[1.1.2]: https://github.com/SEU-USUARIO/hdiscount/releases/tag/v1.1.2
-[1.1.1]: https://github.com/SEU-USUARIO/hdiscount/releases/tag/v1.1.1
-[1.1.0]: https://github.com/SEU-USUARIO/hdiscount/releases/tag/v1.1.0
-[1.0.0]: https://github.com/SEU-USUARIO/hdiscount/releases/tag/v1.0.0
-[1.0.0]: https://github.com/SEU-USUARIO/hdiscount/releases/tag/v1.0.0
+[1.2.6]: https://github.com/anderhofelmann/hdiscount/releases/tag/v1.2.6
+[1.2.5]: https://github.com/anderhofelmann/hdiscount/releases/tag/v1.2.5
+[1.2.4]: https://github.com/anderhofelmann/hdiscount/releases/tag/v1.2.4
+[1.2.3]: https://github.com/anderhofelmann/hdiscount/releases/tag/v1.2.3
+[1.2.2]: https://github.com/anderhofelmann/hdiscount/releases/tag/v1.2.2
+[1.2.1]: https://github.com/anderhofelmann/hdiscount/releases/tag/v1.2.1
+[1.2.0]: https://github.com/anderhofelmann/hdiscount/releases/tag/v1.2.0
+[1.1.6]: https://github.com/anderhofelmann/hdiscount/releases/tag/v1.1.6
+[1.1.5]: https://github.com/anderhofelmann/hdiscount/releases/tag/v1.1.5
+[1.1.4]: https://github.com/anderhofelmann/hdiscount/releases/tag/v1.1.4
+[1.1.3]: https://github.com/anderhofelmann/hdiscount/releases/tag/v1.1.3
+[1.1.2]: https://github.com/anderhofelmann/hdiscount/releases/tag/v1.1.2
+[1.1.1]: https://github.com/anderhofelmann/hdiscount/releases/tag/v1.1.1
+[1.1.0]: https://github.com/anderhofelmann/hdiscount/releases/tag/v1.1.0
+[1.0.0]: https://github.com/anderhofelmann/hdiscount/releases/tag/v1.0.0
+[1.0.0]: https://github.com/anderhofelmann/hdiscount/releases/tag/v1.0.0

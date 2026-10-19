@@ -48,7 +48,7 @@ Com "3 por R$ 100" e 5 unidades (2 + 2 + 1 em cores diferentes):
 
 ## Instalação
 
-1. Baixe o [ZIP mais recente](https://github.com/SEU-USUARIO/hdiscount/releases)
+1. Baixe o [ZIP mais recente](https://github.com/anderhofelmann/hdiscount/releases)
 2. **Plugins → Adicionar Novo → Enviar Plugin**
 3. Instale, ative e acesse **WooCommerce → HDiscount**
 
