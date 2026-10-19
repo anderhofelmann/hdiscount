@@ -10,7 +10,7 @@ require_once __DIR__ . '/wp-mock.php';
 
 define( 'HDISCOUNT_PLUGIN_PATH', __DIR__ . '/../hdiscount/' );
 define( 'HDISCOUNT_PLUGIN_URL', 'https://exemplo.test/' );
-define( 'HDISCOUNT_VERSION', '1.4.2' );
+define( 'HDISCOUNT_VERSION', '1.4.3' );
 define( 'MINUTE_IN_SECONDS', 60 );
 define( 'HOUR_IN_SECONDS', 3600 );
 
@@ -167,6 +167,68 @@ check( 'texto Domain declarado', 1,
     false !== strpos( $cab, 'Text Domain:' ) ? 1 : 0 );
 check( 'licenca declarada', 1,
     false !== strpos( $cab, 'License:' ) ? 1 : 0 );
+
+echo "\n[10] Compatibilidade com PHP 7\n";
+
+// Funcoes que so existem a partir do PHP 8. Usar qualquer uma delas quebra
+// silenciosamente em PHP 7 (o erro fatal so aparece em producao).
+$php8_funcoes = array(
+    'str_contains'    => '8.0',
+    'str_starts_with' => '8.0',
+    'str_ends_with'   => '8.0',
+    'get_debug_type'  => '8.0',
+    'fdiv'            => '8.0',
+    'preg_last_error_msg' => '8.0',
+    'array_is_list'   => '8.1',
+    'enum_exists'     => '8.1',
+    'array_find'      => '8.4',
+    'json_validate'   => '8.3',
+);
+
+$achadas = array();
+foreach ( $arquivos_php as $arquivo ) {
+    $codigo = fonte( $arquivo );
+    foreach ( $php8_funcoes as $funcao => $versao ) {
+        if ( preg_match( '/(?<![a-z0-9_>])' . $funcao . '\s*\(/i', $codigo ) ) {
+            $achadas[] = $funcao . ' (PHP ' . $versao . ') em ' . $arquivo;
+        }
+    }
+}
+check( 'nenhuma funcao exclusiva do PHP 8', 0, count( $achadas ) );
+
+if ( $achadas ) {
+    foreach ( $achadas as $item ) {
+        printf( "      >> %s\n", $item );
+    }
+}
+
+// Sintaxe que o PHP 7 nao entende.
+// Padroes com regex: strpos casaria "preg_match(" como se fosse "match(".
+$sintaxe8 = array(
+    'expressao match (8.0)'      => '/(?<![a-z0-9_>\$])match\s*\(/i',
+    'funcao arrow (7.4)'         => '/(?<![a-z0-9_>\$])fn\s*\(/i',
+    'atribuicao com coalescia'   => '/\?\?=/',
+    'propriedade readonly (8.1)' => '/\breadonly\b/i',
+    'tipo em propriedade (7.4)'  => '/\bpublic\s+(int|string|bool|float|array)\s+\$/i',
+);
+
+foreach ( $sintaxe8 as $descricao => $padrao ) {
+    $onde = array();
+    foreach ( $arquivos_php as $arquivo ) {
+        if ( preg_match( $padrao, fonte( $arquivo ) ) ) {
+            $onde[] = $arquivo;
+        }
+    }
+    check( 'sem ' . $descricao, 0, count( $onde ) );
+
+    if ( $onde ) {
+        printf( "      >> %s\n", implode( ', ', $onde ) );
+    }
+}
+
+// O proprio plugin declara suporte a PHP 7.0.
+check( 'cabecalho declara PHP 7.0', 1,
+    false !== strpos( fonte( 'hdiscount.php' ), 'Requires PHP:      7.0' ) ? 1 : 0 );
 
 echo "\n" . str_repeat( '-', 74 ) . "\n";
 if ( 0 === $fails ) {

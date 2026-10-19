@@ -7,7 +7,7 @@ Requires PHP: 7.0
 Tested up to: 6.4
 WC requires at least: 3.0
 WC tested up to: 8.0
-Stable tag: 1.4.2
+Stable tag: 1.4.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,12 @@ Sim, o plugin usa apenas APIs públicas do WooCommerce, compatível com HPOS.
 5. Carrinho mostrando preço promocional
 
 == Changelog ==
+
+= 1.4.3 =
+* Reforco da compatibilidade PHP 7: o verificador agora detecta funcoes
+  exclusivas do PHP 8 (str_contains, get_debug_type, array_is_list e afins),
+  alem da sintaxe
+* CI ampliado para PHP 7.0 ate 8.4
 
 = 1.4.2 =
 * Versao visivel nas telas do plugin: nas abas da lista de regras e no topo
