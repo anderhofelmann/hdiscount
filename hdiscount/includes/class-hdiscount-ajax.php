@@ -1,7 +1,12 @@
 <?php
 /**
- * Handlers AJAX para busca de produtos no admin
+ * Handlers AJAX para busca de produtos no admin.
  */
+// Acesso direto ao arquivo e bloqueado: so o WordPress pode caregar.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 class HDiscount_AJAX {
 
     public function __construct() {
@@ -9,15 +14,25 @@ class HDiscount_AJAX {
     }
 
     /**
-     * Busca produtos para autocomplete
+     * Busca produtos para autocomplete.
+     *
+     * Protecoes aplicadas, nesta ordem:
+     *  1. acesso apenas a quem logou;
+     *  2. nonce valido ( impede replay e CSRF );
+     *  3. permissao de editar a regra ( impede que um assinante, por exemplo,
+     *     enumerate o catalogo mesmo tendo acesso ao nonce).
      */
     public function search_products() {
         check_ajax_referer( 'hdiscount_search_products', 'nonce' );
 
-        $term = isset( $_POST['term'] ) ? sanitize_text_field( $_POST['term'] ) : '';
+        if ( ! current_user_can( 'edit_posts' ) ) {
+            wp_send_json_error( __( 'Sem permissao para buscar produtos.', 'hdiscount' ), 403 );
+        }
+
+        $term = isset( $_POST['term'] ) ? sanitize_text_field( wp_unslash( $_POST['term'] ) ) : '';
 
         if ( strlen( $term ) < 2 ) {
-            wp_send_json_error( 'Termo muito curto' );
+            wp_send_json_error( __( 'Digite pelo menos 2 caracteres.', 'hdiscount' ), 400 );
         }
 
         $args = array(

@@ -294,3 +294,66 @@
         color: #ffd479;
     }
 }
+/* ---------- Aba Sobre ---------- */
+.hdiscount-about .about-text {
+    font-size: 15px;
+    color: #50575e;
+    font-weight: 400;
+}
+
+.hdiscount-about h1 .dashicons {
+    vertical-align: -2px;
+    color: #2271b1;
+}
+
+.hdiscount-about-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 16px;
+    margin: 16px 0;
+}
+
+.hdiscount-about-card {
+    padding: 16px 18px;
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-left: 4px solid #2271b1;
+    border-radius: 3px;
+}
+
+.hdiscount-about-card h2 {
+    margin-top: 0;
+    font-size: 15px;
+}
+
+.hdiscount-about-card ol,
+.hdiscount-about-card ul {
+    margin: 0 0 0 18px;
+    list-style: disc;
+}
+
+.hdiscount-about-card ol {
+    list-style: decimal;
+}
+
+.hdiscount-about-card li {
+    margin-bottom: 4px;
+}
+
+.hdiscount-about-types {
+    margin-top: 8px;
+}
+
+.hdiscount-about-table {
+    max-width: 720px;
+}
+
+.hdiscount-about-tips {
+    margin-left: 18px;
+    list-style: disc;
+}
+
+.hdiscount-about-footer {
+    margin-top: 16px;
+    color: #646970;
+}

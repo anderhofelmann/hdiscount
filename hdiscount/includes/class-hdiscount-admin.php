@@ -2,6 +2,11 @@
 /**
  * Classe Admin: registra CPT, meta boxes, colunas, salvamento
  */
+// Acesso direto ao arquivo e bloqueado: so o WordPress pode caregar.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 class HDiscount_Admin {
 
     /**
@@ -18,6 +23,9 @@ class HDiscount_Admin {
 
         // Atalho de volta para a lista, dentro da caixa "Publicar".
         add_filter( 'post_submitbox_misc_actions', array( $this, 'render_back_link' ) );
+
+        // Aba "Sobre" com o guia de uso.
+        add_action( 'admin_menu', array( $this, 'register_about_page' ) );
         add_action( 'save_post', array( $this, 'save_meta_box_data' ), 10, 2 );
         add_filter( 'manage_edit-' . self::CPT_SLUG . '_columns', array( $this, 'set_custom_columns' ) );
         add_action( 'manage_' . self::CPT_SLUG . '_posts_custom_column', array( $this, 'render_custom_columns' ), 10, 2 );
@@ -62,6 +70,139 @@ class HDiscount_Admin {
         );
 
         register_post_type( self::CPT_SLUG, $args );
+    }
+
+    /**
+     * Registra a aba "Sobre" dentro do menu do HDiscount.
+     */
+    public function register_about_page() {
+        add_submenu_page(
+            'edit.php?post_type=' . self::CPT_SLUG,
+            __( 'Sobre o HDiscount', 'hdiscount' ),
+            __( 'Sobre', 'hdiscount' ),
+            'edit_posts',
+            self::CPT_SLUG . '_about',
+            array( $this, 'render_about_page' )
+        );
+    }
+
+    /**
+     * Conteudo da aba "Sobre": explica o plugin antes da primeira regra.
+     */
+    public function render_about_page() {
+        // Guarda final: a tela so existe dentro do painel.
+        if ( ! current_user_can( 'edit_posts' ) ) {
+            wp_die( esc_html__( 'Sem permissao para ver esta pagina.', 'hdiscount' ) );
+        }
+
+        $versao = defined( 'HDISCOUNT_VERSION' ) ? HDISCOUNT_VERSION : '';
+        ?>
+        <div class="wrap about-wrap hdiscount-about">
+
+            <h1>
+                <?php esc_html_e( 'HDiscount', 'hdiscount' ); ?>
+                <span class="about-text"><?php esc_html_e( 'Regras de desconto por quantidade para WooCommerce', 'hdiscount' ); ?></span>
+                <?php printf( '<span class="dashicons dashicons-tag"></span> %s', esc_html( $versao ) ); ?>
+            </h1>
+
+            <p class="about-text">
+                <?php esc_html_e( 'Crie promocoes do tipo "leve 3 por R$ 100,00". O preco de cada produto continua normal, e o desconto aparece so no total do carrinho, como um cupom.', 'hdiscount' ); ?>
+            </p>
+
+            <hr>
+
+            <div class="hdiscount-about-grid">
+
+                <div class="hdiscount-about-card">
+                    <h2><?php esc_html_e( '1. Crie a regra', 'hdiscount' ); ?></h2>
+                    <ol>
+                        <li><?php esc_html_e( 'Va em HDiscount e clique em "Adicionar Nova".', 'hdiscount' ); ?></li>
+                        <li><?php esc_html_e( 'De um NOME a regra: e ele que o cliente ve no total, entre parenteses.', 'hdiscount' ); ?></li>
+                        <li><?php esc_html_e( 'Escolha o tipo de desconto:', 'hdiscount' ); ?></li>
+                    </ol>
+                    <ul class="hdiscount-about-types">
+                        <li><strong><?php esc_html_e( 'Preco fixo do pack', 'hdiscount' ); ?></strong> &mdash; <?php esc_html_e( '3 unidades por um preco total combinado. Ex: "Leve 3 por R$ 100,00".', 'hdiscount' ); ?></li>
+                        <li><strong><?php esc_html_e( 'Desconto percentual', 'hdiscount' ); ?></strong> &mdash; <?php esc_html_e( 'X% de desconto a partir da quantidade minima.', 'hdiscount' ); ?></li>
+                        <li><strong><?php esc_html_e( 'Compre X leve Y', 'hdiscount' ); ?></strong> &mdash; <?php esc_html_e( 'O cliente leva mais unidades pagando por menos. Ex: "Compre 4, pague 3".', 'hdiscount' ); ?></li>
+                    </ul>
+                </div>
+
+                <div class="hdiscount-about-card">
+                    <h2><?php esc_html_e( '2. Escolha os produtos', 'hdiscount' ); ?></h2>
+                    <p><?php esc_html_e( 'Busque por nome ou SKU. O produto pai vem primeiro na lista e as variacoes dele aparecem logo abaixo.', 'hdiscount' ); ?></p>
+                    <p><strong><?php esc_html_e( 'Aplicar a todas as variacoes', 'hdiscount' ); ?></strong> &mdash; <?php esc_html_e( 'marcado, escolher o produto ja vale para todas as cores e tamanhos, inclusive os que forem criados depois.', 'hdiscount' ); ?></p>
+                    <p><strong><?php esc_html_e( 'Misturar produtos no pack', 'hdiscount' ); ?></strong> &mdash; <?php esc_html_e( 'marcado, as unidades do pack podem vir de produtos diferentes. Com "Camiseta" e "Calca" na lista, comprar 1 + 2 fecha o pack de 3.', 'hdiscount' ); ?></p>
+                </div>
+
+                <div class="hdiscount-about-card">
+                    <h2><?php esc_html_e( '3. Ajuste o periodo', 'hdiscount' ); ?></h2>
+                    <p><?php esc_html_e( 'Informe a data e hora de inicio e de fim. Sem data de fim, a regra vale por tempo indeterminado.', 'hdiscount' ); ?></p>
+                    <p><?php esc_html_e( 'Para interromper a promocao antes da hora, basta colocar a regra como Inativa, sem mexer nas datas.', 'hdiscount' ); ?></p>
+                </div>
+
+                <div class="hdiscount-about-card">
+                    <h2><?php esc_html_e( 'Quantidade maxima', 'hdiscount' ); ?></h2>
+                    <p><?php esc_html_e( 'Use "Quantidade maxima" para limitar quantas unidades entram no pack.', 'hdiscount' ); ?></p>
+                    <p><?php esc_html_e( 'Com minimo 3 e maximo 3, comprando 4 unidades, 3 recebem o preco do pack e a quarta fica pelo preco normal.', 'hdiscount' ); ?></p>
+                </div>
+
+            </div>
+
+            <hr>
+
+            <h2><?php esc_html_e( 'Como fica no carrinho', 'hdiscount' ); ?></h2>
+            <p><?php esc_html_e( 'Com "3 por R$ 100,00" e 5 unidades de R$ 35,00 (em cores diferentes):', 'hdiscount' ); ?></p>
+
+            <table class="widefat striped hdiscount-about-table">
+                <thead>
+                    <tr>
+                        <th><?php esc_html_e( 'Unidades', 'hdiscount' ); ?></th>
+                        <th><?php esc_html_e( 'Total', 'hdiscount' ); ?></th>
+                        <th><?php esc_html_e( 'Como fecha a conta', 'hdiscount' ); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>2</td><td>R$ 70,00</td><td><?php esc_html_e( 'abaixo do minimo, sem promocao', 'hdiscount' ); ?></td></tr>
+                    <tr><td>3</td><td>R$ 100,00</td><td><?php esc_html_e( '1 pack fechado', 'hdiscount' ); ?></td></tr>
+                    <tr><td>4</td><td>R$ 135,00</td><td><?php esc_html_e( '1 pack + 1 avulsa a R$ 35,00', 'hdiscount' ); ?></td></tr>
+                    <tr><td>6</td><td>R$ 200,00</td><td><?php esc_html_e( '2 packs fechados', 'hdiscount' ); ?></td></tr>
+                </tbody>
+            </table>
+
+            <p class="description" style="margin-top:12px;">
+                <?php esc_html_e( 'No total do carrinho o desconto aparece em uma linha so, somando todos os produtos que fecharam pack.', 'hdiscount' ); ?>
+            </p>
+
+            <hr>
+
+            <h2><?php esc_html_e( 'Dicas', 'hdiscount' ); ?></h2>
+            <ul class="hdiscount-about-tips">
+                <li><?php esc_html_e( 'Use produtos com o mesmo preco quando ativar "Misturar produtos", para o desconto ser sempre igual.', 'hdiscount' ); ?></li>
+                <li><?php esc_html_e( 'O painel mostra um exemplo de calculo enquanto voce preenche a regra. Se algo estiver faltando, ele avisa.', 'hdiscount' ); ?></li>
+                <li><?php esc_html_e( 'Varias regras podem valer ao mesmo tempo. Cada uma soma no total separadamente.', 'hdiscount' ); ?></li>
+                <li><?php esc_html_e( 'Desconfie de um pack cujo preco seja MAIOR que o total dos produtos: nesse caso a regra simplesmente nao se aplica.', 'hdiscount' ); ?></li>
+            </ul>
+
+            <p class="hdiscount-about-footer">
+                <?php
+                printf(
+                    /* translators: 1: nome do autor, 2: link do GitHub */
+                    esc_html__( 'Desenvolvido por %1$s - %2$s', 'hdiscount' ),
+                    esc_html__( 'Anderson Höfelmann', 'hdiscount' ),
+                    '<a href="https://github.com/anderhofelmann" target="_blank" rel="noopener noreferrer">github.com/anderhofelmann</a>'
+                );
+                ?>
+                &nbsp;|&nbsp;
+                <?php
+                printf(
+                    esc_html__( 'Versao %s', 'hdiscount' ),
+                    esc_html( $versao )
+                );
+                ?>
+            </p>
+
+        </div>
+        <?php
     }
 
     /**

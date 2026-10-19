@@ -1,13 +1,13 @@
 === HDiscount ===
 Contributors: andersonhofelmann
-Donate link: https://andersonhofelmann.com
+Donate link: https://github.com/sponsors/anderhofelmann
 Tags: woocommerce, discount, quantity discount, pack pricing, bulk discount, dynamic pricing
 Requires at least: 5.0
 Requires PHP: 7.0
 Tested up to: 6.4
 WC requires at least: 3.0
 WC tested up to: 8.0
-Stable tag: 1.3.1
+Stable tag: 1.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,13 @@ Sim, o plugin usa apenas APIs públicas do WooCommerce, compatível com HPOS.
 5. Carrinho mostrando preço promocional
 
 == Changelog ==
+
+= 1.4.0 =
+* Nova aba "Sobre" em HDiscount > Sobre, com o guia de uso antes da primeira regra
+* Seguranca: o endpoint AJAX agora exige permissao de edicao, alem do nonce
+* Seguranca: todos os arquivos bloqueiam acesso direto pela guarda ABSPATH
+* Seguranca: a desinstalacao apaga tambem os transients do atualizador
+* Link do autor passou a apontar para o GitHub
 
 = 1.3.1 =
 * Painel avisa quando a lista de produtos da mistura tem precos diferentes:

@@ -11,7 +11,7 @@ require_once __DIR__ . '/wp-mock.php';
 
 define( 'HDISCOUNT_PLUGIN_PATH', __DIR__ . '/../hdiscount/' );
 define( 'HDISCOUNT_PLUGIN_URL', 'https://exemplo.test/' );
-define( 'HDISCOUNT_VERSION', '1.3.1' );
+define( 'HDISCOUNT_VERSION', '1.4.0' );
 define( 'MINUTE_IN_SECONDS', 60 );
 
 $fails = 0;
@@ -301,8 +301,14 @@ check( 'usa o post_type correto', true, false !== strpos( $back, 'post_type=hdis
 check( 'texto em portugues', true, false !== strpos( $back, 'Regras de Descontos' ) );
 // A URL vem de admin_url(): nenhum dominio fixo no codigo.
 check( 'URL passa por wp-admin', true, false !== strpos( $back, 'wp-admin/edit.php' ) );
-check( 'nenhum dominio fixo no fonte', 0,
-    preg_match( '/(https?:\\/\\/)(?!exemplo\\.test)/i', file_get_contents( HDISCOUNT_PLUGIN_PATH . 'includes/class-hdiscount-admin.php' ) ) ? 1 : 0 );
+
+// So o GitHub do autor pode estar fixo; nenhum site pessoal antigo.
+$dominios = array();
+if ( preg_match_all( '#https?://([a-z0-9.-]+)#i', file_get_contents( HDISCOUNT_PLUGIN_PATH . 'includes/class-hdiscount-admin.php' ), $dm ) ) {
+    $dominios = array_values( array_unique( $dm[1] ) );
+}
+check( 'apenas dominios permitidos no fonte', 0,
+    count( array_diff( $dominios, array( 'github.com' ) ) ) );
 
 $outro = render_back( 'page' );
 check( 'nao aparece em outros tipos de post', '', trim( $outro ) );
@@ -427,6 +433,27 @@ $h3 = render_meta( 'render_products_meta_box', array(
 check( 'sem mistura: sem aviso de preco', 0,
     substr_count( $h3, 'notice-info' ) + substr_count( $h3, 'notice-warning' ) );
 $GLOBALS['wc_products'][500]->set_price( 50.00 );
+
+echo "\n[21] Aba Sobre\n";
+
+$fonteAdmin2 = file_get_contents( HDISCOUNT_PLUGIN_PATH . 'includes/class-hdiscount-admin.php' );
+
+check( 'registra a aba no admin_menu', 1,
+    false !== strpos( $fonteAdmin2, "add_action( 'admin_menu'" ) ? 1 : 0 );
+check( 'pagina exige permissao', 1,
+    false !== strpos( $fonteAdmin2, "current_user_can( 'edit_posts' )" ) ? 1 : 0 );
+check( 'texto do link do autor com escape', 1,
+    false !== strpos( $fonteAdmin2, 'https://github.com/anderhofelmann' ) ? 1 : 0 );
+check( 'link externo com rel=noopener', 1,
+    false !== strpos( $fonteAdmin2, 'rel="noopener noreferrer"' ) ? 1 : 0 );
+check( 'explica os tres tipos de desconto', 1,
+    ( false !== strpos( $fonteAdmin2, 'pack_price' ) || false !== strpos( $fonteAdmin2, 'Preco fixo do pack' ) ) ? 1 : 0 );
+check( 'explica misturar produtos', 1,
+    false !== strpos( $fonteAdmin2, 'Misturar produtos no pack' ) ? 1 : 0 );
+check( 'explica o exemplo de calculo', 1,
+    false !== strpos( $fonteAdmin2, 'Como fica no carrinho' ) ? 1 : 0 );
+check( 'CSS da aba existe', 1,
+    false !== strpos( file_get_contents( HDISCOUNT_PLUGIN_PATH . 'assets/admin.css' ), 'hdiscount-about' ) ? 1 : 0 );
 
 echo "\n" . str_repeat( '-', 74 ) . "\n";
 if ( 0 === $fails ) {

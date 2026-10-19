@@ -2,6 +2,11 @@
 /**
  * Desinstalação do plugin - limpa dados
  */
+// Acesso direto ao arquivo e bloqueado: so o WordPress pode caregar.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
     exit;
 }
@@ -18,6 +23,12 @@ foreach ( $posts as $post_id ) {
     wp_delete_post( $post_id, true ); // true = force delete (skip trash)
 }
 
-// Remove opções/transients relacionados
+// Remove opcoes gravadas pelo plugin
 delete_option( 'hdiscount_version' );
-wp_cache_flush();
+
+// Remove os transients do verificador de atualizacao
+delete_transient( 'hdiscount_update_check' );
+delete_transient( 'hdiscount_update_check_branch' );
+
+// Limpa o cache das regras em memoria
+wp_cache_delete( 'hdiscount_active_rules', 'hdiscount' );

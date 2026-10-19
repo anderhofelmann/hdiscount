@@ -16,7 +16,7 @@ echo "=============================================================="
 echo
 
 # 1) Sintaxe de todos os arquivos PHP
-echo "[1/7] Sintaxe PHP"
+echo "[1/8] Sintaxe PHP"
 while IFS= read -r f; do
     if ! php -l "$f" >/dev/null 2>&1; then
         echo "  FALHA  ${f#$RAIZ/}"
@@ -29,7 +29,7 @@ done < <(find "$PLUGIN" -name '*.php' | sort)
 echo
 
 # 2) Ausencia de sintaxe exclusiva do PHP 8
-echo "[2/7] Compatibilidade com PHP 7.0"
+echo "[2/8] Compatibilidade com PHP 7.0"
 ACHADO=0
 while IFS= read -r linha; do
     echo "  FALHA  $linha"
@@ -41,7 +41,7 @@ done < <(grep -rnE '\?\?=|str_contains|str_starts_with|str_ends_with|match[[:spa
 echo
 
 # 3) Referencias a funcoes internas do PHP removidas
-echo "[3/7] Funcoes PHP obsoletas"
+echo "[3/8] Funcoes PHP obsoletas"
 ACHADO=0
 while IFS= read -r linha; do
     echo "  FALHA  $linha"
@@ -53,7 +53,7 @@ done < <(grep -rnE '(^|[^>[:alnum:]_])(each|create_function|money_format|ereg|my
 echo
 
 # 4) Suite de testes
-echo "[4/7] Testes de carrinho"
+echo "[4/8] Testes de carrinho"
 if php "$RAIZ/tests/test-cart.php" >/tmp/hd-cart.log 2>&1; then
     tail -1 /tmp/hd-cart.log | sed 's/^/  /'
 else
@@ -63,7 +63,7 @@ fi
 echo
 
 # 5) Testes de inicializacao
-echo "[5/7] Testes de inicializacao"
+echo "[5/8] Testes de inicializacao"
 if php "$RAIZ/tests/test-bootstrap.php" >/tmp/hd-boot.log 2>&1; then
     tail -1 /tmp/hd-boot.log | sed 's/^/  /'
 else
@@ -73,7 +73,7 @@ fi
 echo
 
 # 6) Testes do painel
-echo "[6/7] Testes do painel"
+echo "[6/8] Testes do painel"
 if php "$RAIZ/tests/test-admin.php" >/tmp/hd-admin.log 2>&1; then
     tail -1 /tmp/hd-admin.log | sed 's/^/  /'
 else
@@ -83,11 +83,21 @@ fi
 echo
 
 # 7) Testes do atualizador
-echo "[7/7] Testes do atualizador"
+echo "[7/8] Testes do atualizador"
 if php "$RAIZ/tests/test-updater.php" >/tmp/hd-upd.log 2>&1; then
     tail -1 /tmp/hd-upd.log | sed 's/^/  /'
 else
     grep -E 'FALHA|RESULTADO' /tmp/hd-upd.log | sed 's/^/  /'
+    FALHAS=$((FALHAS+1))
+fi
+echo
+
+# 8) Verificacoes de seguranca
+echo "[8/8] Seguranca"
+if php "$RAIZ/tests/test-security.php" >/tmp/hd-sec.log 2>&1; then
+    tail -1 /tmp/hd-sec.log | sed 's/^/  /'
+else
+    grep -E 'FALHA|RESULTADO' /tmp/hd-sec.log | sed 's/^/  /'
     FALHAS=$((FALHAS+1))
 fi
 echo

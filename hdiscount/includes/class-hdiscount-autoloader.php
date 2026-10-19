@@ -3,6 +3,11 @@
  * Autoloader simples compatível com PHP 7.0+
  * Carrega classes seguindo padrão PSR-4 simplificado
  */
+// Acesso direto ao arquivo e bloqueado: so o WordPress pode caregar.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 class HDiscount_Autoloader {
 
     /**

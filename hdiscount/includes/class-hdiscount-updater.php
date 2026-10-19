@@ -15,6 +15,11 @@
  * A API do GitHub permite 60 requisicoes por hora sem autenticacao. Por isso
  * o resultado fica em cache e nunca e buscado duas vezes no mesmo request.
  */
+// Acesso direto ao arquivo e bloqueado: so o WordPress pode caregar.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 class HDiscount_Updater {
 
     /**

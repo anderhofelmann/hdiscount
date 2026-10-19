@@ -6,6 +6,11 @@
  * arquivo principal repete o mesmo numero, entao os dois precisam ser
  * atualizados juntos quando houver release.
  */
+// Acesso direto ao arquivo e bloqueado: so o WordPress pode caregar.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 class HDiscount_Version {
 
     /**

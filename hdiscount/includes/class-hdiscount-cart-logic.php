@@ -7,6 +7,11 @@
  * TOTAL ALVO do conjunto de unidades elegiveis e derivamos um preco unitario
  * unico. Isso funciona para qualquer combinacao de quantidades e variacoes.
  */
+// Acesso direto ao arquivo e bloqueado: so o WordPress pode caregar.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 class HDiscount_Cart_Logic {
 
     /**
