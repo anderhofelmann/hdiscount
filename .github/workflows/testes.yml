@@ -1,0 +1,69 @@
+name: Testes
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php: [ '7.4', '8.0', '8.1', '8.2', '8.3' ]
+
+    name: PHP ${{ matrix.php }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          # O plugin nao depende de composer, mas o runner usa.
+          coverage: none
+
+      - name: Verificar sintaxe e rodar a suite
+        run: ./tests/run.sh
+
+  php7-minimo:
+    runs-on: ubuntu-latest
+
+    name: PHP 7.0 (compatibilidade minima)
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar PHP 7.0
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.0'
+          coverage: none
+
+      - name: Conferir sintaxe e testes
+        run: ./tests/run.sh
+
+  build:
+    runs-on: ubuntu-latest
+
+    name: Gerar ZIP
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Build
+        run: ./bin/build-zip.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hdiscount
+          path: hdiscount.zip

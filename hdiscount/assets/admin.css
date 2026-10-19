@@ -1,0 +1,296 @@
+/**
+ * HDiscount - estilos do painel e do storefront.
+ */
+
+/* ---------- Painel: atalho de volta ---------- */
+.hdiscount-back-link {
+    margin: 8px 0 0;
+    padding-top: 8px;
+    border-top: 1px solid #f0f0f1;
+    font-size: 13px;
+}
+
+.hdiscount-back-link a {
+    text-decoration: none;
+    display: inline-block;
+}
+
+.hdiscount-back-link a:hover {
+    text-decoration: underline;
+}
+
+/* ---------- Painel: lista de produtos ---------- */
+.hdiscount-option {
+    margin: 0 0 14px;
+    padding: 12px 14px;
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-left: 4px solid #2271b1;
+    border-radius: 3px;
+}
+
+.hdiscount-option__hint {
+    display: block;
+    margin: 8px 0 0 24px;
+    color: #646970;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.hdiscount-product-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 340px;
+    overflow-y: auto;
+    border: 1px solid #dcdcde;
+    border-radius: 3px;
+}
+
+.hdiscount-product-list__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+.hdiscount-product-list__item:last-child {
+    border-bottom: 0;
+}
+
+.hdiscount-product-list__item:nth-child(odd) {
+    background: #fcfcfc;
+}
+
+/* Variacao: recuada e ligada ao produto pai. */
+.hdiscount-product-list__item--child {
+    padding-left: 30px;
+    position: relative;
+}
+
+.hdiscount-product-list__item--child::before {
+    content: "";
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-left: 1px solid #c3c4c7;
+    border-bottom: 1px solid #c3c4c7;
+    transform: translateY(-60%) rotate(-45deg);
+}
+
+.hdiscount-product-list__item--child strong {
+    font-weight: 400;
+}
+
+.hdiscount-product-list__info {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.hdiscount-product-list__sku {
+    padding: 1px 6px;
+    background: #f0f0f1;
+    border-radius: 3px;
+    font-size: 11px;
+    color: #50575e;
+}
+
+.hdiscount-product-list__remove {
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    border-radius: 3px;
+    background: transparent;
+    color: #b32d2e;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.hdiscount-product-list__remove:hover {
+    background: #f0f0f1;
+}
+
+.hdiscount-product-list__empty {
+    margin: 10px 0 0;
+    color: #b32d2e;
+    font-style: italic;
+}
+
+.hdiscount-tag {
+    display: inline-block;
+    padding: 1px 8px;
+    background: #f0f0f1;
+    border-radius: 10px;
+    font-size: 11px;
+    color: #50575e;
+}
+
+.hdiscount-tag--variable {
+    background: #e7f2fb;
+    color: #2271b1;
+}
+
+.hdiscount-tag--muted {
+    background: transparent;
+    color: #646970;
+    font-style: italic;
+}
+
+/* ---------- Painel: sugestoes da busca ---------- */
+.hdiscount-suggestion {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-bottom: 1px solid #f0f0f1;
+    cursor: pointer;
+}
+
+.hdiscount-suggestion:hover {
+    background: #f0f6fc;
+}
+
+.hdiscount-suggestion__name {
+    flex: 1 1 auto;
+}
+
+.hdiscount-suggestion__type,
+.hdiscount-suggestion__sku,
+.hdiscount-suggestion__hint {
+    flex: 0 0 auto;
+    color: #646970;
+    font-size: 11px;
+}
+
+.hdiscount-suggestion__hint {
+    padding: 1px 7px;
+    background: #e7f2fb;
+    border-radius: 10px;
+    color: #2271b1;
+}
+
+.hdiscount-suggestion.already-added {
+    opacity: .5;
+    text-decoration: line-through;
+}
+
+/* ---------- Painel: caixa de exemplo ---------- */
+.hdiscount-preview-box {
+    margin: 16px 0 0;
+    padding: 14px 16px;
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-left: 4px solid #2271b1;
+    border-radius: 3px;
+}
+
+.hdiscount-preview-box__title {
+    margin: 0 0 6px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.hdiscount-preview-box__text {
+    margin: 0 0 10px;
+    color: #2271b1;
+    font-size: 14px;
+}
+
+.hdiscount-preview-box--error {
+    border-left-color: #d63638;
+}
+
+.hdiscount-preview-box__error {
+    margin: 0 0 8px;
+    color: #d63638;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.hdiscount-preview-box__note {
+    margin: 10px 0 0;
+    color: #646970;
+    font-size: 12px;
+    font-style: italic;
+}
+
+.hdiscount-preview-box__examples {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: #50575e;
+    font-size: 13px;
+}
+
+.hdiscount-preview-box__examples li {
+    padding: 3px 0;
+    border-top: 1px dashed #dcdcde;
+}
+
+.hdiscount-preview-box__examples li:first-child {
+    border-top: 0;
+}
+
+/* ---------- Storefront: badge na pagina do produto ---------- */
+.hdiscount-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 12px 0;
+    padding: 8px 14px;
+    background: #fff4e5;
+    border: 1px solid #f0a202;
+    border-radius: 4px;
+    line-height: 1.4;
+}
+
+.hdiscount-badge__tag {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #f0a202;
+    color: #fff;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.hdiscount-badge__text {
+    color: #7a4b00;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* ---------- Storefront: preco original riscado no carrinho ---------- */
+.hdiscount-original {
+    margin-right: 6px;
+    opacity: .55;
+    font-size: .9em;
+}
+
+.woocommerce-cart-form td.product-price del,
+.woocommerce-cart-form .cart_item dl dd p.hdiscount-original {
+    opacity: .55;
+}
+
+/* ---------- Garante contraste em temas escuros ---------- */
+@media (prefers-color-scheme: dark) {
+    .hdiscount-badge {
+        background: #33280f;
+        border-color: #f0a202;
+    }
+
+    .hdiscount-badge__text {
+        color: #ffd479;
+    }
+}

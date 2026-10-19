@@ -1,0 +1,364 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: HDiscount 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/andersonhofelmann/hdiscount\n"
+"POT-Creation-Date: 2024-01-01 00:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Anderson Höfelmann <anderson@andersonhofelmann.com>\n"
+"Language-Team: Portuguese (Brazil) <pt-br@li.org>\n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.0\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPath-1: includes\n"
+
+#: hdiscount.php:5
+msgid "Sistema de regras de desconto por quantidade (packs) para WooCommerce. Permite criar promoções do tipo \"Leve X por R$ Y\" com controle de período, produtos, variações e limites de quantidade."
+msgstr ""
+
+#: hdiscount.php:19
+msgid "HDiscount é um plugin para WooCommerce que permite ao lojista criar regras de desconto baseadas em quantidade (packs). Exemplos de uso:"
+msgstr ""
+
+#: hdiscount.php:20
+msgid "- \"Leve 3 por R$ 100,00\" (preço fixo do pack)"
+msgstr ""
+
+#: hdiscount.php:21
+msgid "- \"Leve 4, pague 3\" (quantidade grátis)"
+msgstr ""
+
+#: hdiscount.php:22
+msgid "- Desconto progressivo por volume"
+msgstr ""
+
+#: hdiscount.php:24
+msgid "Cada regra pode ser configurada com:"
+msgstr ""
+
+#: hdiscount.php:25
+msgid "- Produtos aplicáveis (simples ou variáveis)"
+msgstr ""
+
+#: hdiscount.php:26
+msgid "- Período de vigência (data/hora início e fim)"
+msgstr ""
+
+#: hdiscount.php:27
+msgid "- Quantidade mínima e máxima para o pack"
+msgstr ""
+
+#: hdiscount.php:28
+msgid "- Se aplica a variações iguais ou diferentes"
+msgstr ""
+
+#: hdiscount.php:29
+msgid "- Preço especial do pack ou desconto percentual"
+msgstr ""
+
+#: hdiscount.php:32
+msgid "Desenvolvido por Anderson Höfelmann."
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:33
+msgid "Regras de Desconto"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:34
+msgid "Regra de Desconto"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:35
+msgid "HDiscount"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:36
+msgid "Regra de Desconto"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:37
+msgid "Adicionar Nova"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:38
+msgid "Adicionar Nova Regra"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:39
+msgid "Nova Regra"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:40
+msgid "Editar Regra"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:41
+msgid "Ver Regra"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:42
+msgid "Todas as Regras"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:43
+msgid "Buscar Regras"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:44
+msgid "Nenhuma regra encontrada"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:45
+msgid "Nenhuma regra na lixeira"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:70
+msgid "Configuração da Regra de Desconto"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:74
+msgid "Período de Vigência"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:78
+msgid "Produtos Aplicáveis"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:86
+msgid "Tipo de Desconto"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:89
+msgid "Preço Fixo do Pack (ex: 3 por R$ 100,00)"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:91
+msgid "Desconto Percentual (ex: 20% off na quantidade)"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:93
+msgid "Compre X Leve Y (ex: Leve 4, Pague 3)"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:95
+msgid "<strong>Preço Fixo do Pack:</strong> Define um valor total para X unidades (ex: 3 unidades por R$ 100,00).<br>\n<strong>Desconto Percentual:</strong> Aplica % de desconto nas unidades que atingirem a quantidade mínima.<br>\n<strong>Compre X Leve Y:</strong> Cliente leva quantidade maior pagando apenas a quantidade menor."
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:100
+msgid "Quantidade Mínima do Pack"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:104
+msgid "Quantidade mínima de unidades que o cliente deve comprar para ativar a regra. Ex: se \"3\", a promoção só vale comprando 3 ou mais."
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:109
+msgid "Quantidade Máxima do Pack (0 = sem limite)"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:113
+msgid "Limite máximo de unidades que entram na promoção. Ex: se mín=3 e máx=3, comprando 4 unidades, apenas 3 entram no preço promocional e a 4ª volta ao preço normal. Deixe 0 para aplicar a todas as unidades acima do mínimo."
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:118
+msgid "Limitar Desconto à Quantidade Máxima?"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:120
+msgid "Sim, aplicar desconto apenas até a quantidade máxima definida acima"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:122
+msgid "Se marcado: com mín=3 e máx=3, ao comprar 4 itens, 3 entram no pack e 1 no preço normal.<br>\nSe desmarcado: com mín=3 e máx=3, ao comprar 4 itens, TODOS os 4 entram no preço do pack (repetindo a regra)."
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:127
+msgid "Preço Total do Pack (R$)"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:131
+msgid "Valor TOTAL que o cliente pagará pelas unidades do pack. Ex: para \"3 por R$ 100,00\", digite 100. O preço unitário efetivo será calculado automaticamente (100/3 = 33,33 cada)."
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:136
+msgid "Desconto (%)"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:140
+msgid "Porcentagem de desconto aplicada a cada unidade que atingir a quantidade mínima. Ex: 20% desconto em cada unidade a partir da 3ª."
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:145
+msgid "Comprar (X)"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:149
+msgid "Levar"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:151
+msgid "Configuração \"Compre X Leve Y\". Ex: Comprar 4, Levar 3 = cliente paga 3 e leva 4. A quantidade mínima acima deve ser igual a X."
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:156
+msgid "Aplicar a Variações"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:158
+msgid "Apenas variações IDÊNTICAS (mesma variação)"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:160
+msgid "Quaisquer variações do mesmo produto (misturadas)"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:162
+msgid "<strong>Apenas variações idênticas:</strong> Cliente deve comprar 3 da MESMA variação (ex: 3 camisetas vermelhas P).<br>\n<strong>Quaisquer variações:</strong> Cliente pode misturar (ex: 1 vermelha P + 1 azul M + 1 preta G = 3 no pack).<br>\n<strong>Para produtos simples:</strong> esta opção não afeta o funcionamento."
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:171
+msgid "Status"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:175
+msgid "Ativa"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:176
+msgid "Inativa"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:177
+msgid "Agendada (futura)"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:179
+msgid "<strong>Ativa:</strong> Vigente agora (respeita datas se preenchidas).<br>\n<strong>Inativa:</strong> Desligada, não aplica em carrinhos.<br>\n<strong>Agendada:</strong> Ficará ativa automaticamente na data de início."
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:184
+msgid "Início da Vigência"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:188
+msgid "Data e hora em que a regra passa a valer. Deixe vazio para iniciar imediatamente. Formato: AAAA-MM-DDTHH:MM (ex: 2024-12-25T00:00)."
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:193
+msgid "Fim da Vigência"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:197
+msgid "Data e hora em que a regra expira. Deixe vazio para não expirar. Após esta data/hora, a regra não será mais aplicada."
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:205
+msgid "Buscar produto por nome ou SKU..."
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:206
+msgid "Adicionar"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:208
+msgid "Selecione os produtos que participarão desta regra. Pode adicionar produtos simples e variáveis. Use a busca abaixo para encontrar por nome ou SKU."
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:209
+msgid "Remover"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:331
+msgid "Tipo"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:333
+msgid "Produtos"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:335
+msgid "Qtd Min/Max"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:337
+msgid "Período"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:339
+msgid "Status"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:345
+msgid "Preço Fixo do Pack"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:346
+msgid "Desconto %"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:347
+msgid "Compre X Leve Y"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:361
+msgid "%d produto"
+msgid_plural "%d produtos"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/class-hdiscount-admin.php:371
+msgid "Nenhum"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:379
+msgid "Início:"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:381
+msgid "Fim:"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:383
+msgid "Sem limite de tempo"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:392
+msgid "Limitado ao máximo"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:398
+msgid "Ativa"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:399
+msgid "Inativa"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:400
+msgid "Agendada"
+msgstr ""
+
+#: includes/class-hdiscount-cart-logic.php:170
+msgid "Leve %d por %s"
+msgstr ""
+
+#: includes/class-hdiscount-cart-logic.php:174
+msgid "%d+ unidades: %s%% OFF"
+msgstr ""
+
+#: includes/class-hdiscount-cart-logic.php:178
+msgid "Compre %d, Leve %d"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:265
+#: includes/class-hdiscount-admin.php:266
+msgid "Variável"
+msgstr ""
+
+#: includes/class-hdiscount-admin.php:266
+msgid "Simples"
+msgstr ""
