@@ -11,7 +11,7 @@ require_once __DIR__ . '/wp-mock.php';
 
 define( 'HDISCOUNT_PLUGIN_PATH', __DIR__ . '/../hdiscount/' );
 define( 'HDISCOUNT_PLUGIN_URL', 'https://exemplo.test/' );
-define( 'HDISCOUNT_VERSION', '1.3.0' );
+define( 'HDISCOUNT_VERSION', '1.3.1' );
 define( 'MINUTE_IN_SECONDS', 60 );
 
 $fails = 0;
@@ -389,6 +389,44 @@ check( 'sugestao avisa que inclui as variacoes', 1,
     false !== strpos( $saidaProd, 'inclui todas as variacoes' ) ? 1 : 0 );
 check( 'CSS do aviso na busca', 1,
     false !== strpos( file_get_contents( HDISCOUNT_PLUGIN_PATH . 'assets/admin.css' ), 'hdiscount-suggestion__hint' ) ? 1 : 0 );
+
+echo "\n[20] Aviso sobre precos diferentes na mistura\n";
+
+// Dois produtos simples para o teste de mistura.
+$GLOBALS['wc_products'][400] = new WC_Product( 400, 35.00, 'CAMISETA', 'simple' );
+$GLOBALS['wc_products'][500] = new WC_Product( 500, 35.00, 'CALCA', 'simple' );
+
+// Produtos com o MESMO preco: a informacao tranquiliza.
+$h1 = render_meta( 'render_products_meta_box', array(
+    '_hdiscount_product_ids'  => '400,500',
+    '_hdiscount_mix_products'  => 'yes',
+) );
+check( 'mesmo preco: mostra aviso informativo', 1,
+    false !== strpos( $h1, 'notice-info' ) ? 1 : 0 );
+check( 'mesmo preco: cita o valor', 1,
+    false !== strpos( $h1, '35' ) ? 1 : 0 );
+check( 'mesmo preco: nao mostra alerta de atencao', 0,
+    substr_count( $h1, 'notice-warning' ) );
+
+// Produtos com precos DIFERENTES: alerta.
+$GLOBALS['wc_products'][500]->set_price( 50.00 );
+$h2 = render_meta( 'render_products_meta_box', array(
+    '_hdiscount_product_ids'  => '400,500',
+    '_hdiscount_mix_products'  => 'yes',
+) );
+check( 'precos diferentes: mostra atencao', 1,
+    false !== strpos( $h2, 'notice-warning' ) ? 1 : 0 );
+check( 'precos diferentes: lista os dois valores', 1,
+    ( false !== strpos( $h2, '35' ) && false !== strpos( $h2, '50' ) ) ? 1 : 0 );
+
+// Mistura desligada: nenhum aviso sobre preco.
+$h3 = render_meta( 'render_products_meta_box', array(
+    '_hdiscount_product_ids'  => '400,500',
+    '_hdiscount_mix_products'  => 'no',
+) );
+check( 'sem mistura: sem aviso de preco', 0,
+    substr_count( $h3, 'notice-info' ) + substr_count( $h3, 'notice-warning' ) );
+$GLOBALS['wc_products'][500]->set_price( 50.00 );
 
 echo "\n" . str_repeat( '-', 74 ) . "\n";
 if ( 0 === $fails ) {

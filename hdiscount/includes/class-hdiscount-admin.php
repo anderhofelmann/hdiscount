@@ -305,7 +305,8 @@ class HDiscount_Admin {
                     <p class="description">
                         <?php _e( '<strong>Desmarcado (padrão):</strong> o pack é montado com unidades de UM produto só.<br>
                         <strong>Marcado:</strong> as unidades podem somar entre todos os produtos da lista. Ex: com "Camiseta" e "Calça" na regra, comprar 1 camiseta + 2 calças fecha o pack de 3.<br>
-                        <em>Só faz sentido com mais de um produto na lista.</em>', 'hdiscount' ); ?>
+                        <em>Só faz sentido com mais de um produto na lista.</em><br>
+                        <strong>Recomendação:</strong> use produtos com o mesmo preço, assim o desconto do pack é sempre igual.', 'hdiscount' ); ?>
                     </p>
                 </td>
             </tr>
@@ -508,8 +509,55 @@ if ( $sem_extensao ) {
         }
     }
 }
+// Quando a mistura esta ligada, o preco do pack e fixo. Com produtos de
+// preços diferentes, o quanto o cliente economiza varia conforme quais itens
+// entram no pack, entao vale avisar.
+$mistura = ( 'yes' === get_post_meta( $post->ID, '_hdiscount_mix_products', true ) );
+$precos_produto = array();
+
+if ( $mistura ) {
+    foreach ( $product_ids as $pid ) {
+        $p = wc_get_product( $pid );
+        if ( ! $p || $p->get_parent_id() ) {
+            continue;
+        }
+        $preco = (float) $p->get_price();
+        if ( $preco > 0 ) {
+            $precos_produto[ $pid ] = array( 'nome' => $p->get_name(), 'preco' => $preco );
+        }
+    }
+}
+
+$mesmo_preco = ( count( $precos_produto ) > 0 && 1 === count( array_unique( wp_list_pluck( $precos_produto, 'preco' ) ) ) );
 ?>
         <div id="hdiscount-products-wrapper">
+            <?php if ( $mistura && $precos_produto && $mesmo_preco ) : ?>
+                <div class="notice notice-info inline" style="margin: 0 0 12px;">
+                    <p>
+                        <?php
+                        printf(
+                            /* translators: 1: quantidade de produtos, 2: preco */
+                            esc_html__( 'Os %1$d produtos da lista tem o mesmo preco (%2$s), entao o desconto do pack sera sempre o mesmo.', 'hdiscount' ),
+                            count( $precos_produto ),
+                            wc_price( reset( $precos_produto )['preco'] )
+                        );
+                        ?>
+                    </p>
+                </div>
+            <?php elseif ( $mistura && $precos_produto && ! $mesmo_preco ) : ?>
+                <div class="notice notice-warning inline" style="margin: 0 0 12px;">
+                    <p>
+                        <strong><?php esc_html_e( 'Atencao:', 'hdiscount' ); ?></strong>
+                        <?php esc_html_e( 'os produtos da lista tem preços diferentes e a regra mistura as unidades em um pack so. Como o preco do pack e fixo, a economia do cliente muda conforme quais produtos entram no pack.', 'hdiscount' ); ?>
+                    </p>
+                    <ul style="margin: 6px 0 0 18px;">
+                        <?php foreach ( $precos_produto as $item ) : ?>
+                            <li><?php echo esc_html( $item['nome'] . ': ' . wc_price( $item['preco'] ) ); ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                    <p style="margin: 8px 0 0;"><?php esc_html_e( 'Se voce quer um desconto sempre igual, use produtos com o mesmo preco na lista.', 'hdiscount' ); ?></p>
+                </div>
+            <?php endif; ?>
             <?php if ( $sem_extensao && $pais_variaveis ) : ?>
                 <div class="notice notice-warning inline" style="margin: 0 0 12px;">
                     <p>

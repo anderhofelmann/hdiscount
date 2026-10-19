@@ -9,7 +9,7 @@ require_once __DIR__ . '/wp-mock.php';
 
 define( 'HDISCOUNT_PLUGIN_PATH', __DIR__ . '/../hdiscount/' );
 define( 'HDISCOUNT_PLUGIN_URL', 'https://exemplo.test/' );
-define( 'HDISCOUNT_VERSION', '1.3.0' );
+define( 'HDISCOUNT_VERSION', '1.3.1' );
 define( 'MINUTE_IN_SECONDS', 60 );
 
 require_once HDISCOUNT_PLUGIN_PATH . 'includes/class-hdiscount-updater.php';
@@ -101,7 +101,8 @@ check( 'caminho do plugin', 'hdiscount/hdiscount.php', $u->plugin );
 check( 'ZIP aponta para a release',
     'https://github.com/anderhofelmann/hdiscount/releases/download/v2.0.0/hdiscount.zip', $u->package );
 check( 'aviso de atualizacao preenchido', 1,
-    false !== strpos( $u->upgrade_notice, '2.0.0' ) && false !== strpos( $u->upgrade_notice, '1.3.0' ) ? 1 : 0 );
+    false !== strpos( $u->upgrade_notice, '2.0.0' )
+    && false !== strpos( $u->upgrade_notice, HDiscount_Updater::current_version() ) ? 1 : 0 );
 check( 'secoes com changelog', 1, isset( $u->sections['changelog'] ) ? 1 : 0 );
 
 echo "\n[4] Cache: uma unica chamada a API\n";

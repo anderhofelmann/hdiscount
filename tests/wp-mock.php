@@ -166,6 +166,14 @@ class WP_Error {
 }
 function home_url( $p = '' ) { return 'https://exemplo.test'; }
 function wp_kses_post( $t ) { return $t; }
+function wp_list_pluck( $lista, $campo ) {
+    $out = array();
+    foreach ( (array) $lista as $item ) {
+        if ( is_array( $item ) && isset( $item[ $campo ] ) ) { $out[] = $item[ $campo ]; }
+        elseif ( is_object( $item ) && isset( $item->$campo ) ) { $out[] = $item->$campo; }
+    }
+    return $out;
+}
 function get_option( $k, $d = false ) { return $GLOBALS['wp_options'][$k] ?? $d; }
 function update_option( $k, $v ) { $GLOBALS['wp_options'][$k] = $v; return true; }
 function get_current_screen() { return $GLOBALS['current_screen'] ?? null; }
