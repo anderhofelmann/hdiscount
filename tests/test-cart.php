@@ -13,7 +13,7 @@ require_once __DIR__ . '/wp-mock.php';
 
 define( 'HDISCOUNT_PLUGIN_PATH', __DIR__ . '/../hdiscount/' );
 define( 'HDISCOUNT_PLUGIN_URL', 'https://exemplo.test/' );
-define( 'HDISCOUNT_VERSION', '1.2.6' );
+define( 'HDISCOUNT_VERSION', '1.3.0' );
 define( 'MINUTE_IN_SECONDS', 60 );
 
 require_once HDISCOUNT_PLUGIN_PATH . 'includes/class-hdiscount-autoloader.php';
@@ -59,6 +59,11 @@ function reset_precos() {
 }
 
 function reset_carrinho() {
+    // As chaves de linha comecam de novo a cada carrinho, entao o preco de
+    // referencia em memoria tem de ser limpo junto.
+    if ( class_exists( 'HDiscount_Cart_Logic', false ) ) {
+        HDiscount_Cart_Logic::reset_baseline();
+    }
     $GLOBALS['cart'] = new WC_Cart();
     return $GLOBALS['cart'];
 }
@@ -255,11 +260,12 @@ check( 'carrinho vazio', 0.00, total_carrinho( $GLOBALS['cart'], $logico2 ) );
 echo "\n[13] Extensao a variacoes\n";
 
 /** Regra "3 por 100" em um produto variavel, com extensao ligada/desligada. */
-function regra_extensao( $produtos, $extende, $same = 'no' ) {
+function regra_extensao( $produtos, $extende, $same = 'no', $mistura = 'no' ) {
     regra( array(
         '_hdiscount_product_ids'        => $produtos,
         '_hdiscount_extend_variations'  => $extende,
         '_hdiscount_same_variation'     => $same,
+        '_hdiscount_mix_products'       => $mistura,
     ) );
 }
 
@@ -810,6 +816,111 @@ $logic->add_discount_fee( $c );
 check( 'so um produto tem promocao: -5,00', -5.00, $c->get_fees()[0]['amount'] );
 check( 'subtotal correto: 175,00', 175.00, subtotal_itens( $c ) );
 check( 'total 170,00', 170.00, total_carrinho( $c, $logic ) );
+
+echo "\n[27] Misturar produtos no mesmo pack\n";
+
+// Regra com dois produtos simples de precos diferentes.
+function regra_mistura( $mistura ) {
+    regra( array(
+        '_hdiscount_product_ids'       => '400,500',
+        '_hdiscount_mix_products'      => $mistura,
+        '_hdiscount_extend_variations' => 'yes',
+        '_hdiscount_same_variation'    => 'no',
+    ) );
+}
+
+function reset_precos_mistura() {
+    if ( isset( $GLOBALS['wc_products'][400] ) ) { $GLOBALS['wc_products'][400]->set_price( 35.00 ); }
+    if ( isset( $GLOBALS['wc_products'][500] ) ) { $GLOBALS['wc_products'][500]->set_price( 50.00 ); }
+    if ( isset( $GLOBALS['wc_products'][600] ) ) { $GLOBALS['wc_products'][600]->set_price( 20.00 ); }
+}
+
+reset_precos_mistura();
+$GLOBALS['wc_products'][400] = new WC_Product( 400, 35.00, 'CAMISETA', 'simple' );
+$GLOBALS['wc_products'][500] = new WC_Product( 500, 50.00, 'CALCA', 'simple' );
+
+// SEM mistura: cada produto forma o pack por conta propria.
+regra_mistura( 'no' );
+reset_precos();
+reset_precos_mistura();
+$c = reset_carrinho();
+$c->add( 400, 0, 1 );
+$c->add( 500, 0, 2 );
+$logic->apply_discounts( $c );
+fwrite(STDERR, "\nDEBUG catalogo: ");
+fwrite(STDERR, "\n");
+check( 'sem mistura: 1 + 2 nao fecha pack', 135.00, total_carrinho( $c, $logic ) );
+
+// COM mistura: 35 + 50 + 50 = 135 vira um pack de 100.
+regra_mistura( 'yes' );
+reset_precos();
+reset_precos_mistura();
+$c = reset_carrinho();
+$c->add( 400, 0, 1 );
+$c->add( 500, 0, 2 );
+$logic->apply_discounts( $c );
+check( 'com mistura: 3 un de produtos diferentes = 100,00', 100.00, total_carrinho( $c, $logic ) );
+check( 'subtotal continua 135,00', 135.00, subtotal_itens( $c ) );
+
+// A conta deve avisar que as unidades estao misturadas.
+$achou = false;
+foreach ( $c->get_cart() as $linha ) {
+    if ( ! empty( $linha['hdiscount_breakdown'] ) ) {
+        $achou = ( false !== strpos( $linha['hdiscount_breakdown'], 'misturadas' ) );
+    }
+}
+check( 'a conta diz "misturadas"', 1, $achou );
+
+// Sem mistura suficiente, nao aplica.
+regra_mistura( 'yes' );
+reset_precos();
+reset_precos_mistura();
+$c = reset_carrinho();
+$c->add( 400, 0, 1 );
+$c->add( 500, 0, 1 );
+$logic->apply_discounts( $c );
+check( 'mistura com 2 unidades nao aplica', 85.00, total_carrinho( $c, $logic ) );
+
+// Uma un de cada, mais uma extra do mesmo produto: 35 + 50 + 35 = 120 -> pack 100 + 20 avulso.
+regra_mistura( 'yes' );
+reset_precos();
+reset_precos_mistura();
+$c = reset_carrinho();
+$c->add( 400, 0, 2 );
+$c->add( 500, 0, 1 );
+$logic->apply_discounts( $c );
+check( '2+1 com mistura = 100,00', 100.00, total_carrinho( $c, $logic ) );
+
+// 4 unidades misturadas fecham 1 pack + 1 avulsa.
+regra_mistura( 'yes' );
+reset_precos();
+reset_precos_mistura();
+$c = reset_carrinho();
+$c->add( 400, 0, 2 );
+$c->add( 500, 0, 2 );
+$logic->apply_discounts( $c );
+check( '2+2 com mistura = 150,00 (pack 100 + 1 calca avulsa)', 150.00, total_carrinho( $c, $logic ) );
+
+// 6 unidades misturadas = 2 packs = 200,00.
+regra_mistura( 'yes' );
+reset_precos();
+reset_precos_mistura();
+$c = reset_carrinho();
+$c->add( 400, 0, 3 );
+$c->add( 500, 0, 3 );
+$logic->apply_discounts( $c );
+check( '3+3 com mistura = 200,00', 200.00, total_carrinho( $c, $logic ) );
+
+// Produto fora da lista nao entra na mistura.
+regra_mistura( 'yes' );
+reset_precos();
+$GLOBALS['wc_products'][600] = new WC_Product( 600, 20.00, 'OUTRO', 'simple' );
+$c = reset_carrinho();
+$c->add( 400, 0, 1 );
+$c->add( 500, 0, 1 );
+$c->add( 600, 0, 1 );
+$logic->apply_discounts( $c );
+check( 'produto fora da lista nao entra no pack', 105.00, total_carrinho( $c, $logic ) );
 
 // ================= RESULTADO =================
 echo "\n" . str_repeat( '-', 74 ) . "\n";

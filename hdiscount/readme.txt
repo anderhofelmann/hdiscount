@@ -7,7 +7,7 @@ Requires PHP: 7.0
 Tested up to: 6.4
 WC requires at least: 3.0
 WC tested up to: 8.0
-Stable tag: 1.2.6
+Stable tag: 1.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,15 @@ Sim, o plugin usa apenas APIs públicas do WooCommerce, compatível com HPOS.
 5. Carrinho mostrando preço promocional
 
 == Changelog ==
+
+= 1.3.0 =
+* Nova opcao "Misturar Produtos no Pack": as unidades do pack podem vir de
+  produtos diferentes. Com "Camiseta" e "Calca" na regra, comprar 1 + 2 fecha
+  o pack de 3
+* Correcao: com produtos de precos diferentes no mesmo pack, a unidade avulsa
+  pagava um preco medio, e nao o dela
+* Atualizacao automatica a partir das releases do GitHub: o painel avisa
+  quando ha versao nova e instala pelo proprio WordPress
 
 = 1.2.6 =
 * Escolher uma variacao agora adiciona o PRODUTO PAI na lista, quando a opcao

@@ -137,6 +137,8 @@ class HDiscount_Admin {
         $discount_percent    = get_post_meta( $post->ID, '_hdiscount_percent', true );
         $apply_same_variation = get_post_meta( $post->ID, '_hdiscount_same_variation', true );
         $limit_to_max        = get_post_meta( $post->ID, '_hdiscount_limit_to_max', true );
+        $mix_products        = get_post_meta( $post->ID, '_hdiscount_mix_products', true );
+        $mix_products        = '' === $mix_products ? 'no' : $mix_products;
 
         // Defaults
         $discount_type        = $discount_type ?: 'pack_price';
@@ -286,6 +288,24 @@ class HDiscount_Admin {
                         <?php _e( '<strong>Apenas variações idênticas:</strong> Cliente deve comprar 3 da MESMA variação (ex: 3 camisetas vermelhas P).<br>
                         <strong>Quaisquer variações:</strong> Cliente pode misturar (ex: 1 vermelha P + 1 azul M + 1 preta G = 3 no pack).<br>
                         <strong>Para produtos simples:</strong> esta opção não afeta o funcionamento.', 'hdiscount' ); ?>
+                    </p>
+                </td>
+            </tr>
+
+            <!-- MISTURAR PRODUTOS NO PACK -->
+            <tr>
+                <th scope="row">
+                    <label for="hdiscount_mix_products"><?php _e( 'Misturar Produtos no Pack', 'hdiscount' ); ?></label>
+                </th>
+                <td>
+                    <label>
+                        <input type="checkbox" name="hdiscount_mix_products" id="hdiscount_mix_products" value="yes" <?php checked( $mix_products, 'yes' ); ?> />
+                        <?php _e( 'Sim, as unidades do pack podem vir de produtos diferentes', 'hdiscount' ); ?>
+                    </label>
+                    <p class="description">
+                        <?php _e( '<strong>Desmarcado (padrão):</strong> o pack é montado com unidades de UM produto só.<br>
+                        <strong>Marcado:</strong> as unidades podem somar entre todos os produtos da lista. Ex: com "Camiseta" e "Calça" na regra, comprar 1 camiseta + 2 calças fecha o pack de 3.<br>
+                        <em>Só faz sentido com mais de um produto na lista.</em>', 'hdiscount' ); ?>
                     </p>
                 </td>
             </tr>
@@ -883,6 +903,7 @@ if ( $sem_extensao ) {
             '_hdiscount_same_variation' => 'hdiscount_same_variation',
             '_hdiscount_limit_to_max'   => 'hdiscount_limit_to_max',
             '_hdiscount_extend_variations' => 'hdiscount_extend_variations',
+            '_hdiscount_mix_products'       => 'hdiscount_mix_products',
             '_hdiscount_start_date'     => 'hdiscount_start_date',
             '_hdiscount_end_date'       => 'hdiscount_end_date',
             '_hdiscount_status'         => 'hdiscount_status',
@@ -893,7 +914,7 @@ if ( $sem_extensao ) {
 
             // Um checkbox desmarcado nao chega no POST. Sem tratamento
             // explicito, a regra continuaria valendo como "marcada".
-            if ( '_hdiscount_extend_variations' === $meta_key ) {
+            if ( '_hdiscount_extend_variations' === $meta_key || '_hdiscount_mix_products' === $meta_key ) {
                 update_post_meta(
                     $post_id,
                     $meta_key,

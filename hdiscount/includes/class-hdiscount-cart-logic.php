@@ -173,6 +173,9 @@ class HDiscount_Cart_Logic {
             'limit_to_max'   => get_post_meta( $post_id, '_hdiscount_limit_to_max', true ) ?: 'no',
             // Padrao "sim": escolher o produto variavel ja vale para as variacoes.
             'extend'         => 'no' === get_post_meta( $post_id, '_hdiscount_extend_variations', true ) ? 'no' : 'yes',
+            // Quando ligado, as unidades de produtos diferentes somam no
+            // mesmo pack.
+            'mix_products'   => 'yes' === get_post_meta( $post_id, '_hdiscount_mix_products', true ) ? 'yes' : 'no',
             'product_ids'    => $product_ids,
         );
     }
@@ -420,6 +423,26 @@ class HDiscount_Cart_Logic {
     private function process_rule( $cart, $rule, &$applied ) {
         $grouped = $this->group_cart_items( $cart );
 
+        // MISTURA ENTRE PRODUTOS: todas as unidades cobertas pela regra vao
+        // para um unico conjunto, para que produtos diferentes somem juntos.
+        if ( 'yes' === $rule['mix_products'] ) {
+            $pool = array();
+
+            foreach ( $grouped as $product_id => $variations ) {
+                foreach ( $variations as $variation_id => $data ) {
+                    if ( $this->rule_matches( $rule, $product_id, $variation_id ) ) {
+                        $pool[ $product_id . '-' . $variation_id ] = $data;
+                    }
+                }
+            }
+
+            if ( $pool ) {
+                $this->apply_over_set( $cart, $rule, 0, $pool, $applied );
+            }
+
+            return;
+        }
+
         foreach ( $grouped as $product_id => $variations ) {
 
             // Filtra apenas as variacoes cobertas por esta regra.
@@ -453,10 +476,6 @@ class HDiscount_Cart_Logic {
     }
 
     /**
-     * Aplica a regra sobre um conjunto de variacoes.
-     *
-     * @param WC_Cart $cart
-    /**
      * Aplica a regra a um conjunto de unidades.
      *
      * Cada variacao continua na SUA linha: nada e dividido entre cores.
@@ -489,7 +508,25 @@ class HDiscount_Cart_Logic {
             return;
         }
 
-        $plan = $this->build_plan( $rule, $total_qty, $regular_sum );
+        // Preco de cada unidade, na ordem em que aparecem no carrinho.
+        // Necessario quando o pack mistura produtos de valores diferentes:
+        // a unidade avulsa paga o preco DELA, nao uma media.
+        $unit_prices = array();
+
+        foreach ( $variations as $data ) {
+            foreach ( $data['lines'] as $key ) {
+                if ( ! isset( $cart->cart_contents[ $key ]['data'] ) ) {
+                    continue;
+                }
+                $preco = $this->get_baseline_price( $key, $cart->cart_contents[ $key ] );
+                $vezes = isset( $data['qty_by_line'][ $key ] ) ? (int) $data['qty_by_line'][ $key ] : 0;
+                for ( $i = 0; $i < $vezes; $i++ ) {
+                    $unit_prices[] = $preco;
+                }
+            }
+        }
+
+        $plan = $this->build_plan( $rule, $total_qty, $unit_prices );
 
         if ( ! $plan ) {
             return;
@@ -593,9 +630,18 @@ class HDiscount_Cart_Logic {
      * @param float $regular_sum
      * @return array|null
      */
-    private function build_plan( $rule, $total_qty, $regular_sum ) {
-        $avg = $regular_sum / $total_qty;
+    private function build_plan( $rule, $total_qty, $unit_prices ) {
+        $avg = array_sum( $unit_prices ) / max( 1, $total_qty );
         $min = max( 1, (int) $rule['min_qty'] );
+
+        // Soma de uma faixa da lista de precos.
+        $somar = function( $ini, $fim ) use ( $unit_prices ) {
+            $soma = 0.0;
+            for ( $i = $ini; $i < $fim && $i < count( $unit_prices ); $i++ ) {
+                $soma += $unit_prices[ $i ];
+            }
+            return $soma;
+        };
 
         if ( 'pack_price' === $rule['type'] ) {
             $pack_price = (float) $rule['pack_price'];
@@ -612,8 +658,10 @@ class HDiscount_Cart_Logic {
             $promo_qty = $packs * $min;
             $rest_qty  = $total_qty - $promo_qty;
 
+            // O pack cobre as primeiras unidades do carrinho; as demais
+            // pagam o preco delas mesmas.
             $promo_total = round( $packs * $pack_price, wc_get_price_decimals() );
-            $rest_total  = round( $rest_qty * $avg, wc_get_price_decimals() );
+            $rest_total  = round( $somar( $promo_qty, $total_qty ), wc_get_price_decimals() );
 
             return array(
                 'promo_qty'   => $promo_qty,
@@ -636,8 +684,8 @@ class HDiscount_Cart_Logic {
             $rest_qty  = $total_qty - $promo_qty;
             $promo_unit = $avg * ( 1 - ( $rule['percent'] / 100 ) );
 
-            $promo_total = round( $promo_qty * $promo_unit, wc_get_price_decimals() );
-            $rest_total  = round( $rest_qty * $avg, wc_get_price_decimals() );
+            $promo_total = round( $somar( 0, $promo_qty ) * ( 1 - ( $rule['percent'] / 100 ) ), wc_get_price_decimals() );
+            $rest_total  = round( $somar( $promo_qty, $total_qty ), wc_get_price_decimals() );
 
             return array(
                 'promo_qty'   => $promo_qty,
@@ -666,7 +714,8 @@ class HDiscount_Cart_Logic {
             $paid_qty = $sets * $get;
             $free_qty = $total_qty - $paid_qty;
 
-            $promo_total = round( $paid_qty * $avg, wc_get_price_decimals() );
+            // Paga as primeiras unidades; as demais sao cortesia.
+            $promo_total = round( $somar( 0, $paid_qty ), wc_get_price_decimals() );
 
             return array(
                 'promo_qty'   => $free_qty,
@@ -814,29 +863,36 @@ class HDiscount_Cart_Logic {
             $in_pack = $packs * $min;
             $extra   = $total_qty - $in_pack;
 
+            // Distingue "no total" de "misturadas entre produtos".
+            $sufixo = ( isset( $rule['mix_products'] ) && 'yes' === $rule['mix_products'] )
+                ? __( 'misturadas', 'hdiscount' )
+                : __( 'no total', 'hdiscount' );
+
             // Fecha exato em packs inteiros: nada a detalhar.
             if ( 0 === $extra ) {
                 return sprintf(
                     /* translators: 1: total de unidades do produto, 2: pacotes, 3: unidades por pack, 4: preco do pack */
-                    esc_html__( '%1$d un no total: %2$d pack de %3$d por %4$s = %5$s', 'hdiscount' ),
+                    esc_html__( '%1$d un %6$s: %2$d pack de %3$d por %4$s = %5$s', 'hdiscount' ),
                     $total_qty,
                     $packs,
                     $min,
                     wc_price( $rule['pack_price'] ),
-                    wc_price( $target )
+                    wc_price( $target ),
+                    $sufixo
                 );
             }
 
             return sprintf(
                 /* translators: 1: total de unidades, 2: pacotes, 3: unidades por pack, 4: preco do pack, 5: avulsas, 6: preco unitario regular */
-                esc_html__( '%1$d un no total: %2$d pack de %3$d por %4$s + %5$d avulsas a %6$s = %7$s', 'hdiscount' ),
+                esc_html__( '%1$d un %8$s: %2$d pack de %3$d por %4$s + %5$d avulsas a %6$s = %7$s', 'hdiscount' ),
                 $total_qty,
                 $packs,
                 $min,
                 wc_price( $rule['pack_price'] ),
                 $extra,
                 wc_price( $avg ),
-                wc_price( $target )
+                wc_price( $target ),
+                $sufixo
             );
         }
 

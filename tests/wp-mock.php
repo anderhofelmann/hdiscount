@@ -146,6 +146,26 @@ function add_query_arg( $args, $url ) {
 }
 function esc_url( $u ) { return $u; }
 function admin_url( $p = '' ) { return 'https://exemplo.test/wp-admin/' . ltrim( $p, '/' ); }
+function get_transient( $k ) { $t = $GLOBALS['transients'][ $k ] ?? false; return $t['value'] ?? false; }
+function set_transient( $k, $v, $ttl = 0 ) { $GLOBALS['transients'][ $k ] = array( 'value' => $v, 'ttl' => $ttl ); return true; }
+function delete_transient( $k ) { unset( $GLOBALS['transients'][ $k ] ); return true; }
+function wp_remote_get( $url, $args = array() ) {
+    $GLOBALS['http_calls'][] = $url;
+    $mock = $GLOBALS['http_response'] ?? null;
+    if ( ! $mock ) { return new WP_Error( 'http_request_failed', 'sem rede no teste' ); }
+    if ( isset( $mock['error'] ) ) { return new WP_Error( 'http_request_failed', $mock['error'] ); }
+    return array( 'response' => array( 'code' => $mock['code'] ?? 200 ), 'body' => $mock['body'] ?? '' );
+}
+function wp_remote_retrieve_response_code( $r ) { return is_array( $r ) ? ( $r['response']['code'] ?? 0 ) : 0; }
+function wp_remote_retrieve_body( $r ) { return is_array( $r ) ? ( $r['body'] ?? '' ) : ''; }
+function is_wp_error( $t ) { return $t instanceof WP_Error; }
+class WP_Error {
+    public $code; public $message;
+    public function __construct( $c = '', $m = '' ) { $this->code = $c; $this->message = $m; }
+    public function get_error_message() { return $this->message; }
+}
+function home_url( $p = '' ) { return 'https://exemplo.test'; }
+function wp_kses_post( $t ) { return $t; }
 function get_option( $k, $d = false ) { return $GLOBALS['wp_options'][$k] ?? $d; }
 function update_option( $k, $v ) { $GLOBALS['wp_options'][$k] = $v; return true; }
 function get_current_screen() { return $GLOBALS['current_screen'] ?? null; }
