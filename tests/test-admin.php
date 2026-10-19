@@ -11,7 +11,7 @@ require_once __DIR__ . '/wp-mock.php';
 
 define( 'HDISCOUNT_PLUGIN_PATH', __DIR__ . '/../hdiscount/' );
 define( 'HDISCOUNT_PLUGIN_URL', 'https://exemplo.test/' );
-define( 'HDISCOUNT_VERSION', '1.5.0' );
+define( 'HDISCOUNT_VERSION', '1.5.1' );
 define( 'MINUTE_IN_SECONDS', 60 );
 
 $fails = 0;
@@ -440,8 +440,14 @@ $fonteAdmin2 = file_get_contents( HDISCOUNT_PLUGIN_PATH . 'includes/class-hdisco
 
 check( 'registra a aba no admin_menu', 1,
     false !== strpos( $fonteAdmin2, "add_action( 'admin_menu'" ) ? 1 : 0 );
-check( 'pagina exige permissao', 1,
-    false !== strpos( $fonteAdmin2, "current_user_can( 'edit_posts' )" ) ? 1 : 0 );
+check( 'aba liberada para quem so pode ler', 1,
+    false !== strpos( $fonteAdmin2, "return 'read';" ) ? 1 : 0 );
+check( 'guarda interna exige login', 1,
+    false !== strpos( $fonteAdmin2, 'is_user_logged_in()' ) ? 1 : 0 );
+check( 'nao exige permissao de edicao', 0,
+    preg_match( "/current_user_can\(\s*'edit_posts'\s*\)/", $fonteAdmin2 ) ? 1 : 0 );
+check( 'atalho usa a URL correta do menu', 1,
+    false !== strpos( $fonteAdmin2, 'function about_url' ) ? 1 : 0 );
 check( 'texto do link do autor com escape', 1,
     false !== strpos( $fonteAdmin2, 'https://github.com/anderhofelmann' ) ? 1 : 0 );
 check( 'link externo com rel=noopener', 1,

@@ -7,7 +7,7 @@ Requires PHP: 7.0
 Tested up to: 6.4
 WC requires at least: 3.0
 WC tested up to: 8.0
-Stable tag: 1.5.0
+Stable tag: 1.5.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,12 @@ Sim, o plugin usa apenas APIs públicas do WooCommerce, compatível com HPOS.
 5. Carrinho mostrando preço promocional
 
 == Changelog ==
+
+= 1.5.1 =
+* Correcao: a aba "Sobre" exigia permissao de edicao e devolvia
+  "sem permissao" para quem so tem acesso de leitura ao painel
+* A aba agora abre para qualquer usuario logado e o atalho usa a URL correta
+  conforme o menu onde a pagina foi registrada
 
 = 1.5.0 =
 * Icono proprio do plugin (etiqueta de preco com o simbolo de desconto)

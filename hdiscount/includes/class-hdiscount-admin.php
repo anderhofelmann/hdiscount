@@ -10,6 +10,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 class HDiscount_Admin {
 
     /**
+     * Guarda em qual menu a aba "Sobre" foi registrada.
+     *
+     * Depende de o menu do tipo de post existir no momento do registro.
+     * Serve para o atalho da lista de regras apontar para a URL certa.
+     *
+     * @var string
+     */
+    protected static $about_parent = 'edit.php?post_type=hdiscount_rule';
+
+
+    /**
      * Slug do Custom Post Type
      */
     const CPT_SLUG = 'hdiscount_rule';
@@ -105,22 +116,33 @@ class HDiscount_Admin {
     public function register_about_page() {
         $pai = 'edit.php?post_type=' . self::CPT_SLUG;
 
+        // "read" e o unico papel que todo usuario do painel tem. A aba traz
+        // apenas documentacao do plugin, nao dados da loja, entao nao ha
+        // motivo para exigir permissao de edicao - que impede, por exemplo,
+        // quem visualize a loja sem poder editar posts.
+        $capacidade = self::about_capability();
+
         $adicionado = add_submenu_page(
             $pai,
             __( 'Sobre o HDiscount', 'hdiscount' ),
             __( 'Sobre', 'hdiscount' ),
-            'edit_posts',
+            $capacidade,
             self::CPT_SLUG . '_about',
             array( $this, 'render_about_page' )
         );
 
+        if ( $adicionado ) {
+            self::$about_parent = $pai;
+        }
+
         // Sem o menu do CPT, tenta sob o WooCommerce.
         if ( ! $adicionado ) {
+            self::$about_parent = 'woocommerce';
             add_submenu_page(
                 'woocommerce',
                 __( 'Sobre o HDiscount', 'hdiscount' ),
                 __( 'HDiscount: Sobre', 'hdiscount' ),
-                'edit_posts',
+                $capacidade,
                 self::CPT_SLUG . '_about',
                 array( $this, 'render_about_page' )
             );
@@ -176,6 +198,25 @@ class HDiscount_Admin {
     }
 
     /**
+     * URL da aba "Sobre", conforme o menu onde ela foi registrada.
+     *
+     * @return string
+     */
+    public static function about_url() {
+        if ( 'woocommerce' === self::$about_parent ) {
+            return add_query_arg(
+                array( 'page' => self::CPT_SLUG . '_about' ),
+                admin_url( 'admin.php' )
+            );
+        }
+
+        return add_query_arg(
+            array( 'post_type' => self::CPT_SLUG, 'page' => self::CPT_SLUG . '_about' ),
+            admin_url( 'edit.php' )
+        );
+    }
+
+    /**
      * Versao atual, lida da constante do bootstrap.
      *
      * @return string
@@ -196,24 +237,28 @@ class HDiscount_Admin {
 
         printf(
             '<p class="hdiscount-about-shortcut"><a href="%s">%s</a> &mdash; %s</p>',
-            esc_url(
-                add_query_arg(
-                    array( 'post_type' => self::CPT_SLUG, 'page' => self::CPT_SLUG . '_about' ),
-                    admin_url( 'edit.php' )
-                )
-            ),
+            esc_url( self::about_url() ),
             esc_html__( 'Sobre o HDiscount', 'hdiscount' ),
             esc_html__( 'veja como criar sua primeira regra em 3 passos', 'hdiscount' )
         );
     }
 
     /**
+     * Permissao necessaria para ver a aba "Sobre".
+     *
+     * @return string
+     */
+    public static function about_capability() {
+        return 'read';
+    }
+
+    /**
      * Conteudo da aba "Sobre": explica o plugin antes da primeira regra.
      */
     public function render_about_page() {
-        // Guarda final: a tela so existe dentro do painel.
-        if ( ! current_user_can( 'edit_posts' ) ) {
-            wp_die( esc_html__( 'Sem permissao para ver esta pagina.', 'hdiscount' ) );
+        // Guarda final: nunca exibe a tela fora do painel.
+        if ( ! is_user_logged_in() ) {
+            wp_die( esc_html__( 'Faca login para ver esta pagina.', 'hdiscount' ) );
         }
 
         $versao = defined( 'HDISCOUNT_VERSION' ) ? HDISCOUNT_VERSION : '';
