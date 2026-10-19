@@ -181,6 +181,10 @@ function wp_list_pluck( $lista, $campo ) {
     }
     return $out;
 }
+function get_bloginfo( $campo = '' ) {
+    if ( 'version' === $campo ) { return $GLOBALS['wp_version'] ?? '6.4'; }
+    return '';
+}
 function get_option( $k, $d = false ) { return $GLOBALS['wp_options'][$k] ?? $d; }
 function update_option( $k, $v ) { $GLOBALS['wp_options'][$k] = $v; return true; }
 function get_current_screen() { return $GLOBALS['current_screen'] ?? null; }

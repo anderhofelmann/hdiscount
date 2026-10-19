@@ -7,7 +7,7 @@ Requires PHP: 7.0
 Tested up to: 6.4
 WC requires at least: 3.0
 WC tested up to: 8.0
-Stable tag: 1.4.3
+Stable tag: 1.5.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,12 @@ Sim, o plugin usa apenas APIs públicas do WooCommerce, compatível com HPOS.
 5. Carrinho mostrando preço promocional
 
 == Changelog ==
+
+= 1.5.0 =
+* Icono proprio do plugin (etiqueta de preco com o simbolo de desconto)
+* Menu do WooCommerce passa a usar o icone de desconto nativo do WordPress
+  nas versoes 5.3 ou mais novas, com reserva para as anteriores
+* Logotipo na aba Sobre
 
 = 1.4.3 =
 * Reforco da compatibilidade PHP 7: o verificador agora detecta funcoes

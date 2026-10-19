@@ -384,3 +384,18 @@
 .hdiscount-about-shortcut a {
     font-weight: 600;
 }
+
+/* ---------- Icone do plugin ---------- */
+.hdiscount-about-logo {
+    vertical-align: -8px;
+    margin-right: 4px;
+}
+
+/* WordPress anterior a 5.3 nao tem o icone de desconto: usa o arquivo SVG
+   como plano B, para o menu nunca aparecer sem nada. */
+.wp-menu-image.hdiscount-fallback-icon {
+    background-image: url( "../assets/icon.svg" );
+    background-size: 20px 20px;
+    background-position: center;
+    background-repeat: no-repeat;
+}

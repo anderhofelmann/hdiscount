@@ -7,7 +7,7 @@ require_once __DIR__ . '/wp-mock.php';
 
 define( 'HDISCOUNT_PLUGIN_PATH', __DIR__ . '/../hdiscount/' );
 define( 'HDISCOUNT_PLUGIN_URL', 'https://exemplo.test/' );
-define( 'HDISCOUNT_VERSION', '1.4.3' );
+define( 'HDISCOUNT_VERSION', '1.5.0' );
 define( 'MINUTE_IN_SECONDS', 60 );
 
 $fails = 0;
@@ -148,6 +148,42 @@ check( 'readme tem a versao no Stable tag', 1,
     ( false !== strpos( $readme, 'Stable tag: ' . $versaoClasse ) ) ? 1 : 0 );
 check( 'readme tem entrada de changelog', 1,
     ( false !== strpos( $readme, '= ' . $versaoClasse . ' =' ) ) ? 1 : 0 );
+
+echo "\n[3] Metodos chamados precisam existir\n";
+
+// Uma chamada a metodo inexistente quebra o site em producao (erro fatal),
+// e a suite nao dispara o hook 'init' que registraria o CPT.
+$srcAdmin = file_get_contents( HDISCOUNT_PLUGIN_PATH . 'includes/class-hdiscount-admin.php' );
+
+foreach ( array( 'menu_icon', 'register_cpt', 'render_about_page', 'register_about_page' ) as $metodo ) {
+    check( "HDiscount_Admin::$metodo existe", 1,
+        preg_match( '/function\s+' . preg_quote( $metodo, '/' ) . '\s*\(/', $srcAdmin ) ? 1 : 0 );
+}
+
+// Nenhuma chamada a self::/metodo que a classe nao define.
+$chamadas = array();
+if ( preg_match_all( '/(?:self|static|HDiscount_Admin)::([a-z_]+)\s*\(/', $srcAdmin, $m ) ) {
+    foreach ( array_unique( $m[1] ) as $chamado ) {
+        if ( ! preg_match( '/function\s+' . preg_quote( $chamado, '/' ) . '\s*\(/', $srcAdmin ) ) {
+            $chamadas[] = $chamado;
+        }
+    }
+}
+check( 'nenhuma chamada a metodo inexistente', 0, count( $chamadas ) );
+if ( $chamadas ) {
+    printf( "      >> %s\n", implode( ', ', $chamadas ) );
+}
+
+// O menu do CPT precisa estar definido.
+check( 'menu_icon do CPT vem do metodo', 1,
+    false !== strpos( $srcAdmin, "'menu_icon'          => self::menu_icon()" ) ? 1 : 0 );
+
+// A ativacao tambem precisa de um icone valido.
+$srcBoot = file_get_contents( HDISCOUNT_PLUGIN_PATH . 'hdiscount.php' );
+check( 'ativacao tem reserva de icone', 1,
+    false !== strpos( $srcBoot, "'dashicons-tag'" ) ? 1 : 0 );
+check( 'ativacao nao usa self:: fora da classe', 0,
+    preg_match( '/self::menu_icon/', $srcBoot ) ? 1 : 0 );
 
 echo "\n" . str_repeat( '-', 74 ) . "\n";
 if ( 0 === $fails ) {

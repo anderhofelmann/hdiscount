@@ -3,7 +3,7 @@
  * Plugin Name:       HDiscount
  * Plugin URI:        https://github.com/andersonhofelmann/hdiscount
  * Description:       Sistema de regras de desconto por quantidade (packs) para WooCommerce. Permite criar promoções do tipo "Leve X por R$ Y" com controle de período, produtos, variações e limites de quantidade.
- * Version:           1.4.3
+ * Version:           1.5.0
  * Requires at least: 5.0
  * Requires PHP:      7.0
  * Tested up to:      6.4
@@ -13,6 +13,7 @@
  * Author URI:        https://github.com/anderhofelmann
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+ * Icon URI:          https://raw.githubusercontent.com/anderhofelmann/hdiscount/main/hdiscount/assets/icon.svg
  * Text Domain:       hdiscount
  * Domain Path:       /languages
  *
@@ -40,7 +41,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Versão do plugin
  */
-define( 'HDISCOUNT_VERSION', '1.4.3' );
+define( 'HDISCOUNT_VERSION', '1.5.0' );
 
 /**
  * Caminho do plugin no filesystem
@@ -194,7 +195,6 @@ function hdiscount_activate() {
         'publicly_queryable' => false,
         'show_ui'            => true,
         'show_in_menu'       => 'woocommerce',
-        'menu_icon'          => 'dashicons-tag',
         'capability_type'    => 'post',
         'hierarchical'       => false,
         'supports'           => array( 'title' ),
@@ -203,7 +203,13 @@ function hdiscount_activate() {
         'menu_position'      => 56,
     );
 
-    register_post_type( 'hdiscount_rule', $args );
+    // O icone vem da classe do admin, que ja foi carregada na ativacao.
+    $icone = class_exists( 'HDiscount_Admin' )
+        ? HDiscount_Admin::menu_icon()
+        : 'dashicons-tag';
+
+    register_post_type( 'hdiscount_rule', array_merge( $args, array( 'menu_icon' => $icone ) ) );
+
     flush_rewrite_rules();
 }
 

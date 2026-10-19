@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="HDiscount">
+  <title>HDiscount</title>
+
+  <!-- Etiqueta de preco, com o canto superior esquerdo arredondado -->
+  <path fill="#2271b1" d="M12 12h60l44 44a12 12 0 0 1 0 17l-43 43a12 12 0 0 1-17 0L12 72z"/>
+
+  <!-- Furo da etiqueta -->
+  <circle cx="34" cy="34" r="9" fill="#fff"/>
+
+  <!-- Simbolo de desconto: barra com dois circulos -->
+  <g fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round">
+    <path d="M54 90 L90 54"/>
+  </g>
+  <circle cx="60" cy="60" r="9" fill="#fff"/>
+  <circle cx="84" cy="84" r="9" fill="#fff"/>
+</svg>

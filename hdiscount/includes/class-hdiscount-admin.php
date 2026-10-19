@@ -36,6 +36,28 @@ class HDiscount_Admin {
     /**
      * Registra o Custom Post Type "Regra de Desconto"
      */
+    /**
+     * Escolhe o icone de menu mais adequado a versao do WordPress.
+     *
+     * O dashicon de desconto (uma etiqueta com %) so existe a partir do
+     * WordPress 5.3. Em versoes anteriores cairia um quadrado vazio, entao
+     * mantemos a etiqueta simples como reserva.
+     *
+     * @return string
+     */
+    public static function menu_icon() {
+        $versao = get_bloginfo( 'version' );
+
+        if ( version_compare( $versao, '5.3', '>=' ) ) {
+            return 'dashicons-discount';
+        }
+
+        return 'dashicons-tag';
+    }
+
+    /**
+     * Registra o CPT "Regra de Desconto"
+     */
     public function register_cpt() {
         $labels = array(
             'name'               => _x( 'Regras de Desconto', 'post type general name', 'hdiscount' ),
@@ -59,7 +81,7 @@ class HDiscount_Admin {
             'publicly_queryable' => false,
             'show_ui'            => true,
             'show_in_menu'       => 'woocommerce', // Aparece no menu WooCommerce
-            'menu_icon'          => 'dashicons-tag',
+            'menu_icon'          => self::menu_icon(),
             'capability_type'    => 'post',
             'hierarchical'       => false,
             'supports'           => array( 'title' ),
@@ -199,9 +221,12 @@ class HDiscount_Admin {
         <div class="wrap about-wrap hdiscount-about">
 
             <h1>
+                <img class="hdiscount-about-logo"
+                     src="<?php echo esc_url( HDISCOUNT_PLUGIN_URL . 'assets/icon.svg' ); ?>"
+                     alt="" width="40" height="40" />
                 <?php esc_html_e( 'HDiscount', 'hdiscount' ); ?>
                 <span class="about-text"><?php esc_html_e( 'Regras de desconto por quantidade para WooCommerce', 'hdiscount' ); ?></span>
-                <?php printf( '<span class="dashicons dashicons-tag"></span> %s', esc_html( $versao ) ); ?>
+                <?php printf( '<span class="dashicons %s"></span> %s', esc_attr( self::menu_icon() ), esc_html( $versao ) ); ?>
             </h1>
 
             <p class="about-text">

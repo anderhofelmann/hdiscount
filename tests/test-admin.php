@@ -11,7 +11,7 @@ require_once __DIR__ . '/wp-mock.php';
 
 define( 'HDISCOUNT_PLUGIN_PATH', __DIR__ . '/../hdiscount/' );
 define( 'HDISCOUNT_PLUGIN_URL', 'https://exemplo.test/' );
-define( 'HDISCOUNT_VERSION', '1.4.3' );
+define( 'HDISCOUNT_VERSION', '1.5.0' );
 define( 'MINUTE_IN_SECONDS', 60 );
 
 $fails = 0;
@@ -486,6 +486,37 @@ $selo = ob_get_clean();
 check( 'selo de edicao mostra a versao', 1,
     false !== strpos( $selo, HDISCOUNT_VERSION ) ? 1 : 0 );
 $GLOBALS['post'] = null;
+
+echo "\n[12] Icone do plugin\n";
+
+$srcIcone = file_get_contents( HDISCOUNT_PLUGIN_PATH . 'includes/class-hdiscount-admin.php' );
+$cabIcone = file_get_contents( HDISCOUNT_PLUGIN_PATH . 'hdiscount.php' );
+
+check( 'icone SVG existe no pacote', true,
+    file_exists( HDISCOUNT_PLUGIN_PATH . 'assets/icon.svg' ) );
+check( 'SVG tem titulo acessivel', 1,
+    false !== strpos( file_get_contents( HDISCOUNT_PLUGIN_PATH . 'assets/icon.svg' ), '<title>' ) ? 1 : 0 );
+check( 'SVG tem viewBox', 1,
+    false !== strpos( file_get_contents( HDISCOUNT_PLUGIN_PATH . 'assets/icon.svg' ), 'viewBox' ) ? 1 : 0 );
+check( 'cabecalho declara Icon URI', 1,
+    false !== strpos( $cabIcone, 'Icon URI:' ) ? 1 : 0 );
+check( 'menu usa o icone escolhido', 1,
+    false !== strpos( $srcIcone, 'self::menu_icon()' ) ? 1 : 0 );
+check( 'existe reserva para WP antigo', 1,
+    false !== strpos( $srcIcone, "'5.3'" ) ? 1 : 0 );
+check( 'CSS do logo', 1,
+    false !== strpos( file_get_contents( HDISCOUNT_PLUGIN_PATH . 'assets/admin.css' ), 'hdiscount-about-logo' ) ? 1 : 0 );
+
+// Escolha do icone conforme a versao do WordPress.
+function versao_wp( $v ) { return $GLOBALS['wp_version'] = $v; }
+
+$GLOBALS['wp_version'] = '6.4';
+check( 'WP 5.3+ usa icone de desconto', 'dashicons-discount', HDiscount_Admin::menu_icon() );
+
+$GLOBALS['wp_version'] = '5.2';
+check( 'WP 5.2 ou anterior usa a etiqueta', 'dashicons-tag', HDiscount_Admin::menu_icon() );
+
+$GLOBALS['wp_version'] = '6.4';
 
 echo "\n" . str_repeat( '-', 74 ) . "\n";
 if ( 0 === $fails ) {
