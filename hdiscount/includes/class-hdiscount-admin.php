@@ -160,19 +160,23 @@ class HDiscount_Admin {
      * Aparece em "Todas as regras", "Publicadas", "Rascunhos" etc. É o jeito
      * mais rapido de conferir qual versao esta instalada sem sair da tela.
      *
-     * @param string $link_html
-     * @return string
+     * @param array $views Links de filtro da lista (chave => HTML).
+     * @return array
      */
-    public function append_version_to_views( $link_html ) {
-        $link_html = rtrim( (string) $link_html, '</p>' );
+    public function append_version_to_views( $views ) {
+        // O WordPress entrega uma LISTA de links (Todas, Publicadas...), nao um texto. Tratar como texto
+        // fazia a lista sumir e gerava avisos de PHP; aqui a versao entra como mais um item da lista.
+        $views = is_array( $views ) ? $views : array();
 
-        return $link_html . '<p class="hdiscount-version-tag">'
+        $views['hdiscount_version'] = '<span class="hdiscount-version-tag">'
             . sprintf(
                 /* translators: %s: versao do plugin */
                 esc_html__( 'HDiscount %s', 'hdiscount' ),
                 esc_html( self::get_version() )
             )
-            . '</p>';
+            . '</span>';
+
+        return $views;
     }
 
     /**

@@ -5,6 +5,10 @@ Todas as mudancas do HDiscount.
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 e o versionamento segue [SemVer](https://semver.org/lang/pt-BR/).
 
+## [1.6.2] - 2026-11-01
+
+- Correcao: na lista de regras, os links de filtro (Todas, Publicadas, Rascunhos...) sumiam e o PHP registrava avisos. O selo de versao tratava a lista de links como texto; agora entra como mais um item da lista
+
 ## [1.6.1] - 2026-10-31
 
 - Correcao: o link "Visitar o site do plugin" apontava para uma pagina inexistente no GitHub (usuario escrito errado)

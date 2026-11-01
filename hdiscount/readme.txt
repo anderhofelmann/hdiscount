@@ -7,7 +7,7 @@ Requires PHP: 7.0
 Tested up to: 6.4
 WC requires at least: 3.0
 WC tested up to: 8.0
-Stable tag: 1.6.1
+Stable tag: 1.6.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,9 @@ Sim, o plugin usa apenas APIs públicas do WooCommerce, compatível com HPOS.
 5. Carrinho mostrando preço promocional
 
 == Changelog ==
+
+= 1.6.2 =
+* Correcao: na lista de regras, os links de filtro (Todas, Publicadas, Rascunhos...) sumiam e o PHP registrava avisos. O selo de versao tratava a lista de links como texto; agora entra como mais um item da lista
 
 = 1.6.1 =
 * Corrige o link "Visitar o site do plugin": apontava para uma pagina inexistente

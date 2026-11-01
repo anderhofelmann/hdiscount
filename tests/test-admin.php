@@ -11,7 +11,7 @@ require_once __DIR__ . '/wp-mock.php';
 
 define( 'HDISCOUNT_PLUGIN_PATH', __DIR__ . '/../hdiscount/' );
 define( 'HDISCOUNT_PLUGIN_URL', 'https://exemplo.test/' );
-define( 'HDISCOUNT_VERSION', '1.6.1' );
+define( 'HDISCOUNT_VERSION', '1.6.2' );
 define( 'MINUTE_IN_SECONDS', 60 );
 
 $fails = 0;
@@ -449,6 +449,17 @@ check( 'JS trava e devolve o foco', 1,
     false !== strpos( file_get_contents( HDISCOUNT_PLUGIN_PATH . 'assets/admin.js' ), 'hdiscount-modal-open' ) ? 1 : 0 );
 check( 'explica os tipos de desconto', 1,
     false !== strpos( $srcModal, 'Preco fixo do pack' ) ? 1 : 0 );
+
+// Lista de regras: o filtro "views_edit-*" entrega uma LISTA de links. A versao deve entrar como mais
+// um item, sem apagar os links existentes (antes virava texto: a lista sumia e o PHP avisava).
+$views_in  = array( 'all' => '<a href="#">Todas (3)</a>', 'publish' => '<a href="#">Publicadas (2)</a>' );
+$views_out = $admin->append_version_to_views( $views_in );
+check( 'lista de filtros continua sendo lista', 1, is_array( $views_out ) ? 1 : 0 );
+check( 'mantem os links existentes', 1, ( isset( $views_out['all'], $views_out['publish'] ) && $views_out['all'] === $views_in['all'] ) ? 1 : 0 );
+check( 'acrescenta a versao como item', 1, ( isset( $views_out['hdiscount_version'] ) && false !== strpos( $views_out['hdiscount_version'], '1.6.2' ) ) ? 1 : 0 );
+check( 'nao apaga nem repete os itens', 3, count( $views_out ) );
+check( 'tolera entrada que nao e lista', 1, is_array( $admin->append_version_to_views( '' ) ) && 1 === count( $admin->append_version_to_views( null ) ) ? 1 : 0 );
+check( 'sem "Array" convertido em texto', 1, false === strpos( implode( '', $views_out ), 'Array' ) ? 1 : 0 );
 
 echo "\n" . str_repeat( '-', 74 ) . "\n";
 if ( 0 === $fails ) {
