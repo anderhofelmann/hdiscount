@@ -3,21 +3,7 @@
  */
 
 /* ---------- Painel: atalho de volta ---------- */
-.hdiscount-back-link {
-    margin: 8px 0 0;
-    padding-top: 8px;
-    border-top: 1px solid #f0f0f1;
-    font-size: 13px;
-}
-
-.hdiscount-back-link a {
-    text-decoration: none;
-    display: inline-block;
-}
-
-.hdiscount-back-link a:hover {
-    text-decoration: underline;
-}
+/* O link antigo de volta (dentro da caixa Publicar) foi substituido pelo botao .hdw-back. */
 
 /* ---------- Painel: lista de produtos ---------- */
 .hdiscount-option {
@@ -901,3 +887,51 @@
 }
 .post-type-hdiscount_rule #side-sortables .form-table input,
 .post-type-hdiscount_rule #side-sortables .form-table select { min-width: 0; }
+
+/* ---------- Botao de voltar, lixeira e Publicar ---------- */
+.hdw-back { margin: 14px 0 4px; }
+.hdw-back__btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 8px 18px 8px 10px;
+	border: 1px solid var(--hdw-ink, #1c1b1a);
+	border-radius: 6px;
+	background: #fff;
+	color: var(--hdw-ink, #1c1b1a);
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 1.4;
+	text-decoration: none;
+	box-shadow: 0 1px 2px rgba(28, 27, 26, .08);
+	transition: background-color .15s, color .15s;
+}
+.hdw-back__btn .dashicons { font-size: 18px; width: 18px; height: 18px; }
+.hdw-back__btn:hover, .hdw-back__btn:focus {
+	background: var(--hdw-ink, #1c1b1a);
+	color: var(--hdw-gold-light, #d8bf8c);
+}
+.hdw-back__btn:focus-visible { outline: 2px solid var(--hdw-gold, #b08d57); outline-offset: 2px; }
+
+/* A lixeira nativa (colada ao Publicar) some; ela agora vive na caixa "Excluir regra", no fim da coluna. */
+.post-type-hdiscount_rule #delete-action { display: none; }
+.post-type-hdiscount_rule #major-publishing-actions { padding: 12px; }
+.post-type-hdiscount_rule #publishing-action { float: none; width: 100%; text-align: center; }
+.post-type-hdiscount_rule #publishing-action .button-primary { width: 100%; height: auto; padding: 7px 12px; font-size: 14px; }
+.post-type-hdiscount_rule #publishing-action .spinner { float: none; margin: 8px 0 0; }
+
+.post-type-hdiscount_rule #hdiscount_rule_trash { margin-top: 28px; }
+.post-type-hdiscount_rule #hdiscount_rule_trash .hndle { color: var(--hdw-muted, #7a746a); font-size: 14px; }
+.hdw-trash__text { margin: 0 0 10px; font-size: 12.5px; line-height: 1.5; color: var(--hdw-muted, #7a746a); }
+.hdw-trash__btn {
+	display: inline-block;
+	padding: 5px 12px;
+	border: 1px solid #d3b0aa;
+	border-radius: 6px;
+	background: #fff;
+	color: #a63d33;
+	font-size: 12px;
+	text-decoration: none;
+}
+.hdw-trash__btn:hover, .hdw-trash__btn:focus { background: #a63d33; border-color: #a63d33; color: #fff; }
+.hdw-trash__btn:focus-visible { outline: 2px solid #a63d33; outline-offset: 2px; }

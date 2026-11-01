@@ -5,6 +5,13 @@ Todas as mudancas do HDiscount.
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 e o versionamento segue [SemVer](https://semver.org/lang/pt-BR/).
 
+## [1.8.0] - 2026-11-01
+
+- Edicao da regra: "Voltar para as Regras de Descontos" virou um botao de verdade, no topo da tela, acima do titulo (antes: link pequeno dentro da caixa Publicar)
+- "Mover para a lixeira" saiu de perto do botao Publicar e foi para a caixa "Excluir regra", no fim da coluna lateral, com botao discreto em vermelho e confirmacao
+- O botao Publicar/Atualizar ocupa a largura da caixa, sozinho
+- A confirmacao de exclusao explica o efeito e que da para restaurar; vale tambem para "Colocar na lixeira" na lista
+
 ## [1.7.1] - 2026-11-01
 
 - Edicao da regra: a coluna lateral (Periodo de Vigencia e Publicar) agora tem 330 px, para os campos de data caberem sem corte

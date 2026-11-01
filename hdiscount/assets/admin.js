@@ -192,7 +192,7 @@ jQuery( document ).ready( function( $ ) {
      * Confirmacao antes de excluir uma regra.
      */
     $( '#delete-action a, .submitdelete' ).on( 'click', function( e ) {
-        if ( ! window.confirm( msg.i18n_confirm_delete || 'Confirma a exclusao desta regra?' ) ) {
+        if ( ! window.confirm( msg.i18n_confirm_delete || 'Mover esta regra para a lixeira?' ) ) {
             e.preventDefault();
         }
     } );

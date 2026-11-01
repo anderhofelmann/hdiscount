@@ -7,7 +7,7 @@ Requires PHP: 7.0
 Tested up to: 6.4
 WC requires at least: 3.0
 WC tested up to: 8.0
-Stable tag: 1.7.1
+Stable tag: 1.8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,12 @@ Sim, o plugin usa apenas APIs públicas do WooCommerce, compatível com HPOS.
 5. Carrinho mostrando preço promocional
 
 == Changelog ==
+
+= 1.8.0 =
+* Edição da regra: o botão "Voltar para as Regras de Descontos" agora é um botão de verdade, no topo da tela, acima do título (antes era um link pequeno dentro da caixa Publicar)
+* "Mover para a lixeira" saiu de perto do botão Publicar e foi para uma caixa própria, "Excluir regra", no fim da coluna lateral, com botão discreto em vermelho e confirmação antes de excluir
+* O botão Publicar/Atualizar ocupa a largura da caixa, sozinho, sem nada colado nele
+* A confirmação de exclusão agora explica o efeito (a regra deixa de valer nos carrinhos) e que dá para restaurar da lixeira; vale também para "Colocar na lixeira" na lista
 
 = 1.7.1 =
 * Edição da regra: a coluna lateral (Período de Vigência e Publicar) agora tem 330 px, para os campos de data caberem sem corte

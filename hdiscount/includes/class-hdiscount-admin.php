@@ -39,8 +39,8 @@ class HDiscount_Admin {
         add_action( 'init', array( $this, 'register_cpt' ) );
         add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ) );
 
-        // Atalho de volta para a lista, dentro da caixa "Publicar".
-        add_filter( 'post_submitbox_misc_actions', array( $this, 'render_back_link' ) );
+        // Botao de volta para a lista, no topo da edicao (acima do titulo), bem visivel.
+        add_action( 'edit_form_top', array( $this, 'render_back_link' ) );
 
         // Cabecalho de marca (versao, atualizacao, desenvolvedor e guia) nas telas do plugin.
         add_action( 'in_admin_header', array( $this, 'render_brand_header' ) );
@@ -422,10 +422,10 @@ class HDiscount_Admin {
     }
 
     /**
-     * Atalho para voltar a lista de regras.
+     * Botao para voltar a lista de regras.
      *
-     * Aparece dentro da caixa "Publicar", logo abaixo do botao, para
-     * facilitar a volta depois de salvar ou publicar uma regra.
+     * Fica no topo da tela de edicao, acima do titulo, onde o olhar passa primeiro. Antes era um
+     * link pequeno dentro da caixa "Publicar", facil de nao ver e colado ao link da lixeira.
      *
      * @return void
      */
@@ -442,9 +442,31 @@ class HDiscount_Admin {
         );
 
         printf(
-            '<div class="hdiscount-back-link"><a href="%s">&#8592; %s</a></div>',
+            '<p class="hdw-back"><a class="hdw-back__btn" href="%s"><span class="dashicons dashicons-arrow-left-alt2" aria-hidden="true"></span>%s</a></p>',
             esc_url( $url ),
             esc_html__( 'Voltar para as Regras de Descontos', 'hdiscount' )
+        );
+    }
+
+    /**
+     * Caixa "Excluir regra": a lixeira fica longe do botao Publicar, para ninguem clicar sem querer.
+     * O link e o mesmo do WordPress (com nonce); o JavaScript pede confirmacao antes.
+     *
+     * @param WP_Post $post Regra em edicao.
+     */
+    public function render_trash_meta_box( $post ) {
+        $url = function_exists( 'get_delete_post_link' ) && $post ? get_delete_post_link( $post->ID ) : '';
+
+        if ( ! $url ) {
+            echo '<p class="hdw-trash__text">' . esc_html__( 'Você não tem permissão para excluir esta regra.', 'hdiscount' ) . '</p>';
+            return;
+        }
+
+        echo '<p class="hdw-trash__text">' . esc_html__( 'Move esta regra para a lixeira: ela deixa de valer nos carrinhos. Dá para restaurá-la depois.', 'hdiscount' ) . '</p>';
+        printf(
+            '<p><a class="submitdelete hdw-trash__btn" href="%s">%s</a></p>',
+            esc_url( $url ),
+            esc_html__( 'Mover para a lixeira', 'hdiscount' )
         );
     }
 
@@ -478,6 +500,19 @@ class HDiscount_Admin {
             'normal',
             'default'
         );
+
+        // Regra nova (ainda nao salva) nao tem o que excluir.
+        global $post;
+        if ( ! ( $post && 'auto-draft' === $post->post_status ) ) {
+            add_meta_box(
+                'hdiscount_rule_trash',
+                __( 'Excluir regra', 'hdiscount' ),
+                array( $this, 'render_trash_meta_box' ),
+                self::CPT_SLUG,
+                'side',
+                'low'
+            );
+        }
     }
 
     /**
@@ -1561,7 +1596,7 @@ $mesmo_preco = ( count( $precos_produto ) > 0 && 1 === count( array_unique( wp_l
         wp_enqueue_script( 'hdiscount-admin', HDISCOUNT_PLUGIN_URL . 'assets/admin.js', array( 'jquery' ), HDISCOUNT_VERSION, true );
         wp_enqueue_style( 'hdiscount-admin', HDISCOUNT_PLUGIN_URL . 'assets/admin.css', array(), HDISCOUNT_VERSION );
         wp_localize_script( 'hdiscount-admin', 'hdiscount_admin', array(
-            'i18n_confirm_delete' => __( 'Confirma a exclusao desta regra?', 'hdiscount' ),
+            'i18n_confirm_delete' => __( 'Mover esta regra para a lixeira? Ela deixa de valer nos carrinhos. Você poderá restaurá-la depois, na lixeira.', 'hdiscount' ),
             'i18n_invalid_dates'  => __( 'A data de fim deve ser posterior a data de inicio.', 'hdiscount' ),
             'i18n_max_lt_min'     => __( 'A quantidade maxima nao pode ser menor que a minima.', 'hdiscount' ),
             'i18n_sure'          => __( 'Tem certeza?', 'hdiscount' ),

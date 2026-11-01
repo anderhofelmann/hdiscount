@@ -11,7 +11,7 @@ require_once __DIR__ . '/wp-mock.php';
 
 define( 'HDISCOUNT_PLUGIN_PATH', __DIR__ . '/../hdiscount/' );
 define( 'HDISCOUNT_PLUGIN_URL', 'https://exemplo.test/' );
-define( 'HDISCOUNT_VERSION', '1.7.1' );
+define( 'HDISCOUNT_VERSION', '1.8.0' );
 define( 'MINUTE_IN_SECONDS', 60 );
 
 $fails = 0;
@@ -295,7 +295,8 @@ function render_back( $post_type ) {
 }
 
 $back = render_back( 'hdiscount_rule' );
-check( 'exibe o atalho na tela da regra', true, false !== strpos( $back, 'hdiscount-back-link' ) );
+check( 'exibe o botao de voltar na tela da regra', true, false !== strpos( $back, 'hdw-back__btn' ) );
+check( 'e um botao de verdade (link com seta e texto), nao um link solto', true, ( false !== strpos( $back, 'dashicons-arrow-left-alt2' ) && false !== strpos( $back, '<a class="hdw-back__btn"' ) ) );
 check( 'aponta para edit.php do CPT', true, false !== strpos( $back, 'edit.php' ) );
 check( 'usa o post_type correto', true, false !== strpos( $back, 'post_type=hdiscount_rule' ) );
 check( 'texto em portugues', true, false !== strpos( $back, 'Regras de Descontos' ) );
@@ -313,12 +314,11 @@ check( 'apenas dominios permitidos no fonte', 0,
 $outro = render_back( 'page' );
 check( 'nao aparece em outros tipos de post', '', trim( $outro ) );
 
-echo "\n[16] Atalho registrado como filtro do WordPress\n";
+echo "\n[16] Botao de voltar registrado no topo do formulario de edicao\n";
 $fonteAdmin = file_get_contents( HDISCOUNT_PLUGIN_PATH . 'includes/class-hdiscount-admin.php' );
-check( 'usa post_submitbox_misc_actions', true,
-    false !== strpos( $fonteAdmin, 'post_submitbox_misc_actions' ) );
-check( 'filtro registrado no construtor', 1,
-    preg_match( "/add_filter\\(\s*'post_submitbox_misc_actions'/", $fonteAdmin ) ? 1 : 0 );
+check( 'usa edit_form_top (acima do titulo)', 1,
+    preg_match( "/add_action\\(\s*'edit_form_top',\s*array\\(\s*\\\$this,\s*'render_back_link'/", $fonteAdmin ) ? 1 : 0 );
+check( 'nao fica mais dentro da caixa Publicar', 0, false !== strpos( $fonteAdmin, 'post_submitbox_misc_actions' ) ? 1 : 0 );
 
 echo "\n[17] Lista de produtos agrupada por produto pai\n";
 
@@ -565,6 +565,39 @@ check( 'caixas nao escondem o que transborda (sem overflow:hidden no postbox)', 
 check( 'CSS escopado: nada de regra solta em body/a/p', 0, preg_match( '/^(body|a|p|h1|h2|table|input)\s*[{,]/m', $css ) );
 check( 'icone na cor da marca', 1, false !== strpos( file_get_contents( HDISCOUNT_PLUGIN_PATH . 'assets/icon.svg' ), '#b08d57' ) ? 1 : 0 );
 check( 'selo de versao antigo da lista foi removido (fonte unica: o cabecalho)', 0, false !== strpos( $src, 'append_version_to_views' ) ? 1 : 0 );
+
+// ---------------------------------------------------------------------------
+// Lixeira longe do botao Publicar
+// ---------------------------------------------------------------------------
+echo "\n[Lixeira em local estrategico]\n";
+function get_delete_post_link( $id ) { return $GLOBALS['sem_permissao'] ?? false ? '' : 'https://exemplo.test/wp-admin/post.php?post=' . (int) $id . '&action=trash&_wpnonce=abc123'; }
+$GLOBALS['sem_permissao'] = false;
+$caixa = captura( function () use ( $admin ) { $admin->render_trash_meta_box( (object) array( 'ID' => 7 ) ); } );
+check( 'a caixa mostra o botao de lixeira', 1, false !== strpos( $caixa, 'hdw-trash__btn' ) ? 1 : 0 );
+check( 'rotulo "Mover para a lixeira"', 1, false !== strpos( $caixa, 'Mover para a lixeira' ) ? 1 : 0 );
+check( 'link e o do WordPress, com nonce', 1, false !== strpos( $caixa, 'action=trash&amp;_wpnonce=abc123' ) || false !== strpos( $caixa, 'action=trash&_wpnonce=abc123' ) ? 1 : 0 );
+check( 'usa a classe submitdelete (o JS pede confirmacao)', 1, false !== strpos( $caixa, 'class="submitdelete hdw-trash__btn"' ) ? 1 : 0 );
+check( 'explica o efeito e que da para restaurar', 1, ( false !== strpos( $caixa, 'deixa de valer nos carrinhos' ) && false !== strpos( $caixa, 'restaur' ) ) ? 1 : 0 );
+check( 'sem onclick nem estilo embutido', 0, preg_match( '/onclick=|style=/i', $caixa ) );
+$GLOBALS['sem_permissao'] = true;
+$caixa = captura( function () use ( $admin ) { $admin->render_trash_meta_box( (object) array( 'ID' => 7 ) ); } );
+check( 'sem permissao: nao mostra link algum', 0, false !== strpos( $caixa, '<a ' ) ? 1 : 0 );
+check( 'sem permissao: explica o motivo', 1, false !== strpos( $caixa, 'permiss' ) ? 1 : 0 );
+$GLOBALS['sem_permissao'] = false;
+$caixa = captura( function () use ( $admin ) { $admin->render_trash_meta_box( null ); } );
+check( 'sem regra (null) nao quebra e nao mostra link', 0, false !== strpos( $caixa, '<a ' ) ? 1 : 0 );
+
+$srcA = file_get_contents( HDISCOUNT_PLUGIN_PATH . 'includes/class-hdiscount-admin.php' );
+$cssA = file_get_contents( HDISCOUNT_PLUGIN_PATH . 'assets/admin.css' );
+$jsA  = file_get_contents( HDISCOUNT_PLUGIN_PATH . 'assets/admin.js' );
+check( 'caixa registrada na coluna lateral, por ultimo (prioridade low)', 1,
+    preg_match( "/'hdiscount_rule_trash',.*?'side',\s*'low'/s", $srcA ) ? 1 : 0 );
+check( 'regra nova (auto-draft) nao ganha a caixa de lixeira', 1, false !== strpos( $srcA, "'auto-draft' === \$post->post_status" ) ? 1 : 0 );
+check( 'a lixeira nativa, colada ao Publicar, fica escondida', 1, preg_match( '/post-type-hdiscount_rule #delete-action\s*\{\s*display:\s*none/', $cssA ) ? 1 : 0 );
+check( 'botao Publicar ocupa a largura toda, sozinho', 1, preg_match( '/#publishing-action \.button-primary\s*\{[^}]*width:\s*100%/', $cssA ) ? 1 : 0 );
+check( 'CSS do botao de voltar e do botao de lixeira', 1, ( false !== strpos( $cssA, '.hdw-back__btn' ) && false !== strpos( $cssA, '.hdw-trash__btn' ) ) ? 1 : 0 );
+check( 'confirmacao no clique de .submitdelete (edicao e linha da lista)', 1, preg_match( "/'#delete-action a, \.submitdelete'\s*\)\.on\(\s*'click'/", $jsA ) ? 1 : 0 );
+check( 'texto da confirmacao fala em lixeira e em restaurar', 1, ( false !== strpos( $srcA, 'Mover esta regra para a lixeira?' ) && false !== strpos( $srcA, 'restaur' ) ) ? 1 : 0 );
 
 echo "\n" . str_repeat( '-', 74 ) . "\n";
 if ( 0 === $fails ) {
