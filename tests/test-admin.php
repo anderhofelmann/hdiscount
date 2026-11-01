@@ -11,7 +11,7 @@ require_once __DIR__ . '/wp-mock.php';
 
 define( 'HDISCOUNT_PLUGIN_PATH', __DIR__ . '/../hdiscount/' );
 define( 'HDISCOUNT_PLUGIN_URL', 'https://exemplo.test/' );
-define( 'HDISCOUNT_VERSION', '1.7.0' );
+define( 'HDISCOUNT_VERSION', '1.7.1' );
 define( 'MINUTE_IN_SECONDS', 60 );
 
 $fails = 0;
@@ -560,6 +560,7 @@ check( 'script e estilo tambem na lista de Plugins (link "Sobre")', 1, false !==
 check( 'CSS do cabecalho e do cartao', 1, ( false !== strpos( $css, '.hdw-brand' ) && false !== strpos( $css, '.hdw-dev' ) ) ? 1 : 0 );
 check( 'CSS usa a paleta (variaveis)', 1, false !== strpos( $css, '--hdw-gold' ) ? 1 : 0 );
 check( 'coluna lateral: campos em 100% (nao cortam)', 1, ( false !== strpos( $css, '#side-sortables .form-table input[type="datetime-local"]' ) && preg_match( '/#side-sortables \.form-table select[^{]*\{[^}]*width:\s*100% !important/s', $css ) ) ? 1 : 0 );
+check( 'coluna lateral com 330 px: coluna E contenedor das caixas, com seletor que vence o do WP (acima de 1100 px)', 1, ( false !== strpos( $css, '@media screen and (min-width: 1100px)' ) && preg_match( '/#poststuff #post-body\.columns-2 #postbox-container-1\s*\{\s*width:\s*330px;\s*margin-right:\s*-350px/', $css ) && preg_match( '/#poststuff #post-body\.columns-2\s*\{\s*margin-right:\s*350px/', $css ) && preg_match( '/#postbox-container-1 #side-sortables[^{]*\{\s*width:\s*330px/s', $css ) ) ? 1 : 0 );
 check( 'caixas nao escondem o que transborda (sem overflow:hidden no postbox)', 0, preg_match( '/#poststuff \.postbox\s*\{[^}]*overflow:\s*hidden/s', $css ) );
 check( 'CSS escopado: nada de regra solta em body/a/p', 0, preg_match( '/^(body|a|p|h1|h2|table|input)\s*[{,]/m', $css ) );
 check( 'icone na cor da marca', 1, false !== strpos( file_get_contents( HDISCOUNT_PLUGIN_PATH . 'assets/icon.svg' ), '#b08d57' ) ? 1 : 0 );

@@ -7,7 +7,7 @@ Requires PHP: 7.0
 Tested up to: 6.4
 WC requires at least: 3.0
 WC tested up to: 8.0
-Stable tag: 1.7.0
+Stable tag: 1.7.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,9 @@ Sim, o plugin usa apenas APIs públicas do WooCommerce, compatível com HPOS.
 5. Carrinho mostrando preço promocional
 
 == Changelog ==
+
+= 1.7.1 =
+* Edição da regra: a coluna lateral (Período de Vigência e Publicar) agora tem 330 px, para os campos de data caberem sem corte
 
 = 1.7.0 =
 * Visual premium para loja de moda: cabecalho de marca (grafite, marfim e dourado) com nome, versao, se ha atualizacao e os dados do desenvolvedor, nas telas do plugin

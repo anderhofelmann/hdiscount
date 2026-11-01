@@ -5,6 +5,10 @@ Todas as mudancas do HDiscount.
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 e o versionamento segue [SemVer](https://semver.org/lang/pt-BR/).
 
+## [1.7.1] - 2026-11-01
+
+- Edicao da regra: a coluna lateral (Periodo de Vigencia e Publicar) agora tem 330 px, para os campos de data caberem sem corte
+
 ## [1.7.0] - 2026-11-01
 
 - Visual premium para loja de moda: cabecalho de marca (grafite, marfim e dourado) com nome, versao, situacao da atualizacao e dados do desenvolvedor nas telas do plugin

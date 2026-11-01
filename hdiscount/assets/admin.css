@@ -887,3 +887,17 @@
 	box-sizing: border-box;
 }
 .post-type-hdiscount_rule #side-sortables .form-table .description { margin-top: 6px; line-height: 1.5; }
+
+/* ---------- Coluna lateral da edicao: 330 px ----------
+   O WordPress fixa a coluna (#postbox-container-1) E o contenedor das caixas (#side-sortables) em
+   280 px; os dois precisam mudar. Com 330 px os campos de data nativos (que trazem o icone do
+   calendario) cabem folgados. So em janelas de 1100 px ou mais: abaixo disso a area principal
+   ficaria apertada demais, e la os campos ja ocupam 100% da caixa de 280 px. */
+@media screen and (min-width: 1100px) {
+	.post-type-hdiscount_rule #poststuff #post-body.columns-2 { margin-right: 350px; }
+	.post-type-hdiscount_rule #poststuff #post-body.columns-2 #postbox-container-1 { width: 330px; margin-right: -350px; }
+	.post-type-hdiscount_rule #poststuff #post-body.columns-2 #postbox-container-1 #side-sortables,
+	.post-type-hdiscount_rule #poststuff .inner-sidebar #side-sortables { width: 330px; }
+}
+.post-type-hdiscount_rule #side-sortables .form-table input,
+.post-type-hdiscount_rule #side-sortables .form-table select { min-width: 0; }
