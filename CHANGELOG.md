@@ -5,6 +5,13 @@ Todas as mudancas do HDiscount.
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 e o versionamento segue [SemVer](https://semver.org/lang/pt-BR/).
 
+## [1.6.1] - 2026-10-31
+
+- Correcao: o link "Visitar o site do plugin" apontava para uma pagina inexistente no GitHub (usuario escrito errado)
+- Seguranca do atualizador: so oferece versoes de releases do proprio repositorio, por HTTPS e com SHA-256 publicado; o hash agora e conferido no arquivo que sera instalado, e release sem hash e recusada
+- A consulta de atualizacao nao envia mais o endereco do site ao GitHub
+- A lista de regras escapa a saida de tipo e status; salvar limita o percentual entre 0 e 100 e o preco do pack a valores nao negativos
+
 ## [1.3.0] - 2026-10-19
 
 - Nova opcao "Misturar Produtos no Pack": as unidades do pack podem vir de produtos diferentes. Com "Camiseta" e "Calca" na regra, comprar 1 + 2 fecha o pack de 3

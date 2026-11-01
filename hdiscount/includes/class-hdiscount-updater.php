@@ -60,6 +60,7 @@ class HDiscount_Updater {
     public static function init() {
         add_filter( 'pre_set_site_transient_update_plugins', array( __CLASS__, 'check_update' ) );
         add_filter( 'plugins_api', array( __CLASS__, 'plugin_info' ), 10, 3 );
+        add_filter( 'upgrader_pre_download', array( __CLASS__, 'pre_download' ), 10, 4 );
         add_action( 'admin_notices', array( __CLASS__, 'render_notice' ) );
     }
 
@@ -89,15 +90,10 @@ class HDiscount_Updater {
             return $transient;
         }
 
-        // O pacote precisa ser https: um espelho em http permitiria alterar
-        // o arquivo no caminho.
-        if ( 0 !== stripos( (string) $release['package'], 'https://' ) ) {
-            return $transient;
-        }
-
-        // O hash publicado precisa bater com o arquivo que o GitHub
-        // informa. Divergencia significa arquivo trocado no caminho.
-        if ( ! self::hash_matches_release( $release ) ) {
+        // So oferece a atualizacao se o pacote vem do proprio repositorio, por
+        // HTTPS, e a release publica o hash. O hash e conferido contra o arquivo
+        // na hora da instalacao (pre_download).
+        if ( ! self::package_is_trusted( $release ) ) {
             return $transient;
         }
 
@@ -224,7 +220,8 @@ class HDiscount_Updater {
             $url,
             array(
                 'timeout'    => 8,
-                'user-agent' => 'HDiscount/' . self::current_version() . '; ' . home_url(),
+                // Sem o endereco do site: o GitHub nao precisa saber onde o plugin esta instalado.
+                'user-agent' => 'HDiscount/' . self::current_version(),
                 'headers'    => array( 'Accept' => 'application/vnd.github+json' ),
             )
         );
@@ -265,36 +262,68 @@ class HDiscount_Updater {
     }
 
     /**
-     * Confere o hash do pacote com o publicado na release.
+     * O pacote vem de uma release do repositorio oficial, por HTTPS, e ha
+     * SHA-256 publicado?
      *
-     * Sem hash publicado, a atualizacao segue (repositorios antigos nao tem).
-     * Com hash, ele precisa bater: caso contrario o update e recusado.
+     * Sem hash a atualizacao NAO e oferecida: instalar codigo sem poder
+     * confere-lo e o risco que este atualizador existe para evitar.
      *
      * @param array $release
      * @return bool
      */
-    private static function hash_matches_release( $release ) {
-        $esperado = isset( $release['sha256'] ) ? $release['sha256'] : '';
-
-        // Release sem hash: nao ha como conferir, aceita.
-        if ( '' === $esperado ) {
-            return true;
+    public static function package_is_trusted( $release ) {
+        if ( ! is_array( $release ) || empty( $release['package'] ) || empty( $release['sha256'] ) ) {
+            return false;
         }
 
-        $arquivo = download_url( $release['package'], 30 );
+        $prefixo = 'https://github.com/' . self::REPO . '/releases/download/';
 
-        if ( is_wp_error( $arquivo ) || ! $arquivo ) {
-            return false;
+        return 0 === strpos( (string) $release['package'], $prefixo )
+            && false === strpos( (string) $release['package'], '..' )
+            && (bool) preg_match( '/^[a-f0-9]{64}$/', (string) $release['sha256'] );
+    }
+
+    /**
+     * Confere o SHA-256 do arquivo que o WordPress vai INSTALAR.
+     *
+     * O WordPress baixaria o pacote de novo na hora da instalacao; conferir o
+     * hash so ao procurar atualizacoes nao garante que o arquivo instalado seja
+     * o conferido. Aqui o pacote e baixado uma vez, o hash e verificado e o
+     * proprio arquivo verificado e entregue ao instalador.
+     *
+     * @param false|string|WP_Error $reply
+     * @param string                $package
+     * @param WP_Upgrader           $upgrader
+     * @param array                 $hook_extra
+     * @return false|string|WP_Error
+     */
+    public static function pre_download( $reply, $package, $upgrader = null, $hook_extra = array() ) {
+        $plugin = ( is_array( $hook_extra ) && isset( $hook_extra['plugin'] ) ) ? $hook_extra['plugin'] : '';
+
+        if ( self::PLUGIN_FILE !== $plugin ) {
+            return $reply; // Nao e o nosso plugin: o WordPress segue normalmente.
+        }
+
+        $release = self::get_release_info();
+
+        if ( ! self::package_is_trusted( $release ) || $release['package'] !== $package ) {
+            return new WP_Error( 'hdiscount_pacote_nao_confiavel', __( 'HDiscount: o pacote de atualizacao nao e de uma release confiavel do repositorio; nada foi instalado.', 'hdiscount' ) );
+        }
+
+        $arquivo = download_url( $package, 60 );
+
+        if ( is_wp_error( $arquivo ) ) {
+            return $arquivo;
         }
 
         $hash = hash_file( 'sha256', $arquivo );
 
-        // Remove o arquivo temporario.
-        if ( function_exists( 'unlink' ) ) {
+        if ( ! is_string( $hash ) || ! hash_equals( $release['sha256'], $hash ) ) {
             @unlink( $arquivo );
+            return new WP_Error( 'hdiscount_hash_diferente', __( 'HDiscount: o SHA-256 do pacote nao confere com o publicado na release; nada foi instalado.', 'hdiscount' ) );
         }
 
-        return hash_equals( $esperado, (string) $hash );
+        return $arquivo;
     }
 
     /**

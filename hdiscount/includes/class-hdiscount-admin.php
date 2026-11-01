@@ -1274,8 +1274,13 @@ $mesmo_preco = ( count( $precos_produto ) > 0 && 1 === count( array_unique( wp_l
                     break;
 
                 case '_hdiscount_pack_price':
+                    // Preco nunca negativo (o carrinho tambem recusa valor <= 0).
+                    $value = max( 0, (float) str_replace( ',', '.', $raw ) );
+                    break;
+
                 case '_hdiscount_percent':
-                    $value = (float) str_replace( ',', '.', $raw );
+                    // Percentual entre 0 e 100 (o carrinho tambem recusa o que estiver fora disso).
+                    $value = min( 100, max( 0, (float) str_replace( ',', '.', $raw ) ) );
                     break;
 
                 case '_hdiscount_product_ids':
@@ -1346,7 +1351,7 @@ $mesmo_preco = ( count( $precos_produto ) > 0 && 1 === count( array_unique( wp_l
                     'percent'        => __( 'Desconto %', 'hdiscount' ),
                     'buy_x_get_y'    => __( 'Compre X Leve Y', 'hdiscount' ),
                 );
-                echo isset( $labels[ $type ] ) ? $labels[ $type ] : $type;
+                echo isset( $labels[ $type ] ) ? esc_html( $labels[ $type ] ) : esc_html( $type );
                 break;
 
             case 'hdiscount_products':
@@ -1425,7 +1430,7 @@ $mesmo_preco = ( count( $precos_produto ) > 0 && 1 === count( array_unique( wp_l
                     'inactive'   => '<span style="color:#d63638;">● ' . __( 'Inativa', 'hdiscount' ) . '</span>',
                     'scheduled'  => '<span style="color:#dba617;">● ' . __( 'Agendada', 'hdiscount' ) . '</span>',
                 );
-                echo isset( $labels[ $status ] ) ? $labels[ $status ] : $status;
+                echo isset( $labels[ $status ] ) ? $labels[ $status ] : esc_html( $status );
                 break;
         }
     }

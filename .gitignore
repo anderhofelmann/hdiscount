@@ -16,3 +16,4 @@ Thumbs.db
 # Dependencias
 node_modules/
 vendor/
+backups/

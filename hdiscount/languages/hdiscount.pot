@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: HDiscount 1.0.0\n"
-"Report-Msgid-Bugs-To: https://github.com/andersonhofelmann/hdiscount\n"
+"Report-Msgid-Bugs-To: https://github.com/anderhofelmann/hdiscount\n"
 "POT-Creation-Date: 2024-01-01 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Anderson Höfelmann <anderson@andersonhofelmann.com>\n"

@@ -9,13 +9,15 @@ require_once __DIR__ . '/wp-mock.php';
 
 define( 'HDISCOUNT_PLUGIN_PATH', __DIR__ . '/../hdiscount/' );
 define( 'HDISCOUNT_PLUGIN_URL', 'https://exemplo.test/' );
-define( 'HDISCOUNT_VERSION', '1.6.0' );
+define( 'HDISCOUNT_VERSION', '1.6.1' );
 define( 'MINUTE_IN_SECONDS', 60 );
 
 require_once HDISCOUNT_PLUGIN_PATH . 'includes/class-hdiscount-updater.php';
 
 $fails = 0;
 $total = 0;
+
+define( 'HASH_PADRAO', str_repeat( 'c', 64 ) );
 
 function check( $desc, $esperado, $obtido ) {
     global $fails, $total;
@@ -42,7 +44,7 @@ function github( $tag, $com_zip = true, $code = 200 ) {
         'body' => wp_json_encode_compat( array(
             'tag_name' => $tag,
             'html_url' => 'https://github.com/anderhofelmann/hdiscount/releases/tag/' . $tag,
-            'body'     => '### Novidades\n\n- Correcoes e melhorias.',
+            'body'     => 'sha256: ' . HASH_PADRAO . "\n### Novidades\n\n- Correcoes e melhorias.",
             'assets'   => $assets,
         ) ),
     );
@@ -180,23 +182,99 @@ check( 'ignora hash invalido',   '',    HDiscount_Updater::extract_sha256( 'sha2
 check( 'sem hash devolve vazio', '',    HDiscount_Updater::extract_sha256( 'texto sem hash' ) );
 check( 'corpo vazio',            '',    HDiscount_Updater::extract_sha256( '' ) );
 
-// Release sem hash: atualizacao segue (repositorios antigos).
-github( 'v2.0.0' ); limpar();
-$t = HDiscount_Updater::check_update( transiente_vazio() );
-check( 'sem hash: atualizacao liberada', 1, count( $t->response ) );
-
-// Pacote em http e recusado.
+// Release sem hash: a atualizacao NAO e oferecida (instalar sem poder conferir e o risco a evitar).
 $GLOBALS['transients'] = array();
 $GLOBALS['http_calls'] = array();
 $GLOBALS['http_response'] = array(
     'code' => 200,
     'body' => json_encode( array(
         'tag_name' => 'v2.0.0',
-        'assets'   => array( array( 'name' => 'hdiscount.zip', 'browser_download_url' => 'http://exemplo.test/hdiscount.zip' ) ),
+        'body'     => 'sem hash aqui',
+        'assets'   => array( array( 'name' => 'hdiscount.zip', 'browser_download_url' => 'https://github.com/anderhofelmann/hdiscount/releases/download/v2.0.0/hdiscount.zip' ) ),
     ) ),
 );
 $t = HDiscount_Updater::check_update( transiente_vazio() );
+check( 'sem hash: atualizacao recusada', 0, count( $t->response ) );
+
+/** Release com hash e URL configuraveis. */
+function release_com( $url, $hash ) {
+    $GLOBALS['transients'] = array();
+    $GLOBALS['http_calls'] = array();
+    $GLOBALS['http_response'] = array(
+        'code' => 200,
+        'body' => json_encode( array(
+            'tag_name' => 'v2.0.0',
+            'body'     => 'sha256: ' . $hash,
+            'assets'   => array( array( 'name' => 'hdiscount.zip', 'browser_download_url' => $url ) ),
+        ) ),
+    );
+}
+
+$repo_url = 'https://github.com/anderhofelmann/hdiscount/releases/download/v2.0.0/hdiscount.zip';
+
+release_com( 'http://exemplo.test/hdiscount.zip', HASH_PADRAO );
+$t = HDiscount_Updater::check_update( transiente_vazio() );
 check( 'pacote em http e recusado', 0, count( $t->response ) );
+
+release_com( 'https://exemplo.test/hdiscount.zip', HASH_PADRAO );
+$t = HDiscount_Updater::check_update( transiente_vazio() );
+check( 'https de outro servidor e recusado', 0, count( $t->response ) );
+
+release_com( 'https://github.com/outro-usuario/outro-repo/releases/download/v2.0.0/hdiscount.zip', HASH_PADRAO );
+$t = HDiscount_Updater::check_update( transiente_vazio() );
+check( 'release de OUTRO repositorio e recusada', 0, count( $t->response ) );
+
+release_com( 'https://github.com/anderhofelmann/hdiscount/releases/download/../../x/hdiscount.zip', HASH_PADRAO );
+$t = HDiscount_Updater::check_update( transiente_vazio() );
+check( 'URL com ../ e recusada', 0, count( $t->response ) );
+
+release_com( $repo_url, HASH_PADRAO );
+$t = HDiscount_Updater::check_update( transiente_vazio() );
+check( 'repositorio oficial + hash: atualizacao oferecida', 1, count( $t->response ) );
+check( 'a checagem nao baixa o pacote (so consulta a API)', 1, count( $GLOBALS['http_calls'] ) );
+
+echo "\n[8b] Verificacao na hora da instalacao (upgrader_pre_download)\n";
+
+$pacote    = 'conteudo-do-plugin';
+$hash_real = hash( 'sha256', $pacote );
+$extra     = array( 'plugin' => 'hdiscount/hdiscount.php' );
+
+release_com( $repo_url, $hash_real );
+$GLOBALS['download_content'] = $pacote;
+$r = HDiscount_Updater::pre_download( false, $repo_url, null, $extra );
+check( 'hash confere: devolve o arquivo verificado', true, is_string( $r ) && file_exists( $r ) );
+check( 'o arquivo entregue e o verificado', $pacote, is_string( $r ) ? file_get_contents( $r ) : null );
+if ( is_string( $r ) ) { @unlink( $r ); }
+
+release_com( $repo_url, $hash_real );
+$GLOBALS['download_content'] = 'conteudo-ADULTERADO';
+$r = HDiscount_Updater::pre_download( false, $repo_url, null, $extra );
+check( 'arquivo trocado no caminho: bloqueado', 'hdiscount_hash_diferente', is_wp_error( $r ) ? $r->code : '' );
+
+release_com( $repo_url, $hash_real );
+$GLOBALS['download_content'] = null;
+$r = HDiscount_Updater::pre_download( false, $repo_url, null, $extra );
+check( 'falha no download: bloqueada', true, is_wp_error( $r ) );
+
+release_com( $repo_url, $hash_real );
+$GLOBALS['download_content'] = $pacote;
+$r = HDiscount_Updater::pre_download( false, 'https://exemplo.test/outro.zip', null, $extra );
+check( 'pacote diferente do anunciado: bloqueado', 'hdiscount_pacote_nao_confiavel', is_wp_error( $r ) ? $r->code : '' );
+
+$GLOBALS['transients'] = array();
+$GLOBALS['http_response'] = null;
+$r = HDiscount_Updater::pre_download( false, $repo_url, null, $extra );
+check( 'sem conseguir consultar a release: bloqueado', true, is_wp_error( $r ) );
+
+release_com( $repo_url, $hash_real );
+check( 'pacote de outro plugin nao e tocado', false, HDiscount_Updater::pre_download( false, 'https://exemplo.test/x.zip', null, array( 'plugin' => 'woocommerce/woocommerce.php' ) ) );
+check( 'sem dados do plugin nao e tocado', false, HDiscount_Updater::pre_download( false, 'https://exemplo.test/x.zip', null, array() ) );
+check( 'package_is_trusted: sem hash', false, HDiscount_Updater::package_is_trusted( array( 'package' => $repo_url, 'sha256' => '' ) ) );
+check( 'package_is_trusted: hash mal formado', false, HDiscount_Updater::package_is_trusted( array( 'package' => $repo_url, 'sha256' => 'xyz' ) ) );
+check( 'package_is_trusted: tudo certo', true, HDiscount_Updater::package_is_trusted( array( 'package' => $repo_url, 'sha256' => HASH_PADRAO ) ) );
+check( 'package_is_trusted: nao e array', false, HDiscount_Updater::package_is_trusted( null ) );
+
+$GLOBALS['download_content'] = $pacote;
 
 echo "\n[9] Guia em modal\n";
 
