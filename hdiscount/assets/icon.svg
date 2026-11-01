@@ -2,7 +2,7 @@
   <title>HDiscount</title>
 
   <!-- Etiqueta de preco, com o canto superior esquerdo arredondado -->
-  <path fill="#2271b1" d="M12 12h60l44 44a12 12 0 0 1 0 17l-43 43a12 12 0 0 1-17 0L12 72z"/>
+  <path fill="#b08d57" d="M12 12h60l44 44a12 12 0 0 1 0 17l-43 43a12 12 0 0 1-17 0L12 72z"/>
 
   <!-- Furo da etiqueta -->
   <circle cx="34" cy="34" r="9" fill="#fff"/>

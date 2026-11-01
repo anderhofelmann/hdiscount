@@ -9,7 +9,7 @@ require_once __DIR__ . '/wp-mock.php';
 
 define( 'HDISCOUNT_PLUGIN_PATH', __DIR__ . '/../hdiscount/' );
 define( 'HDISCOUNT_PLUGIN_URL', 'https://exemplo.test/' );
-define( 'HDISCOUNT_VERSION', '1.6.2' );
+define( 'HDISCOUNT_VERSION', '1.7.0' );
 define( 'MINUTE_IN_SECONDS', 60 );
 
 require_once HDISCOUNT_PLUGIN_PATH . 'includes/class-hdiscount-updater.php';
@@ -280,10 +280,8 @@ echo "\n[9] Guia em modal\n";
 
 $adminSrc2 = file_get_contents( HDISCOUNT_PLUGIN_PATH . 'includes/class-hdiscount-admin.php' );
 
-check( 'botao na lista de regras', 1,
-    false !== strpos( $adminSrc2, "add_action( 'restrict_manage_posts'" ) ? 1 : 0 );
-check( 'botao na tela de edicao', 1,
-    false !== strpos( $adminSrc2, "'edit_form_top', array( \$this, 'render_about_button' )" ) ? 1 : 0 );
+check( 'botao do guia no cabecalho (lista e edicao)', 1,
+    false !== strpos( $adminSrc2, "add_action( 'in_admin_header', array( \$this, 'render_brand_header' )" ) ? 1 : 0 );
 check( 'link na linha do plugin', 1,
     false !== strpos( $adminSrc2, "add_filter( 'plugin_row_meta'" ) ? 1 : 0 );
 check( 'modal no rodape', 1,

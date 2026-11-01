@@ -10,7 +10,7 @@ require_once __DIR__ . '/wp-mock.php';
 
 define( 'HDISCOUNT_PLUGIN_PATH', __DIR__ . '/../hdiscount/' );
 define( 'HDISCOUNT_PLUGIN_URL', 'https://exemplo.test/' );
-define( 'HDISCOUNT_VERSION', '1.6.2' );
+define( 'HDISCOUNT_VERSION', '1.7.0' );
 define( 'MINUTE_IN_SECONDS', 60 );
 define( 'HOUR_IN_SECONDS', 3600 );
 
@@ -187,9 +187,9 @@ check( 'link do plugin e o mesmo repositorio do atualizador', 1,
 
 $admin_src = fonte( 'includes/class-hdiscount-admin.php' );
 check( 'coluna Tipo escapa o valor que nao esta na lista', 1,
-    false !== strpos( $admin_src, ': esc_html( $type );' ) ? 1 : 0 );
+    false !== strpos( $admin_src, ': esc_html( $type ) ) .' ) ? 1 : 0 );
 check( 'coluna Status escapa o valor que nao esta na lista', 1,
-    false !== strpos( $admin_src, ': esc_html( $status );' ) ? 1 : 0 );
+    false !== strpos( $admin_src, "esc_html( \$status ) . '</span>'" ) ? 1 : 0 );
 check( 'salvar limita o percentual entre 0 e 100', 1,
     false !== strpos( $admin_src, 'min( 100, max( 0, (float) str_replace' ) ? 1 : 0 );
 check( 'salvar nunca grava preco de pack negativo', 1,

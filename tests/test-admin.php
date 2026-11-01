@@ -11,7 +11,7 @@ require_once __DIR__ . '/wp-mock.php';
 
 define( 'HDISCOUNT_PLUGIN_PATH', __DIR__ . '/../hdiscount/' );
 define( 'HDISCOUNT_PLUGIN_URL', 'https://exemplo.test/' );
-define( 'HDISCOUNT_VERSION', '1.6.2' );
+define( 'HDISCOUNT_VERSION', '1.7.0' );
 define( 'MINUTE_IN_SECONDS', 60 );
 
 $fails = 0;
@@ -448,18 +448,122 @@ check( 'CSS do modal', 1,
 check( 'JS trava e devolve o foco', 1,
     false !== strpos( file_get_contents( HDISCOUNT_PLUGIN_PATH . 'assets/admin.js' ), 'hdiscount-modal-open' ) ? 1 : 0 );
 check( 'explica os tipos de desconto', 1,
-    false !== strpos( $srcModal, 'Preco fixo do pack' ) ? 1 : 0 );
+    false !== strpos( $srcModal, 'Preço fixo do pack' ) ? 1 : 0 );
 
-// Lista de regras: o filtro "views_edit-*" entrega uma LISTA de links. A versao deve entrar como mais
-// um item, sem apagar os links existentes (antes virava texto: a lista sumia e o PHP avisava).
-$views_in  = array( 'all' => '<a href="#">Todas (3)</a>', 'publish' => '<a href="#">Publicadas (2)</a>' );
-$views_out = $admin->append_version_to_views( $views_in );
-check( 'lista de filtros continua sendo lista', 1, is_array( $views_out ) ? 1 : 0 );
-check( 'mantem os links existentes', 1, ( isset( $views_out['all'], $views_out['publish'] ) && $views_out['all'] === $views_in['all'] ) ? 1 : 0 );
-check( 'acrescenta a versao como item', 1, ( isset( $views_out['hdiscount_version'] ) && false !== strpos( $views_out['hdiscount_version'], '1.6.2' ) ) ? 1 : 0 );
-check( 'nao apaga nem repete os itens', 3, count( $views_out ) );
-check( 'tolera entrada que nao e lista', 1, is_array( $admin->append_version_to_views( '' ) ) && 1 === count( $admin->append_version_to_views( null ) ) ? 1 : 0 );
-check( 'sem "Array" convertido em texto', 1, false === strpos( implode( '', $views_out ), 'Array' ) ? 1 : 0 );
+// ---------------------------------------------------------------------------
+// Visual premium (1.7): cabecalho de marca, colunas, modal do desenvolvedor.
+// ---------------------------------------------------------------------------
+function get_site_transient( $k ) { return $GLOBALS['site_transients'][ $k ] ?? false; }
+
+function tela( $id ) { $GLOBALS['current_screen'] = null === $id ? null : (object) array( 'id' => $id, 'post_type' => 'hdiscount_rule' ); }
+function captura( $cb ) { ob_start(); $cb(); return ob_get_clean(); }
+
+echo "\n[Cabecalho de marca]\n";
+foreach ( array( 'edit-hdiscount_rule', 'hdiscount_rule' ) as $id ) {
+    tela( $id );
+    $h = captura( array( $admin, 'render_brand_header' ) );
+    check( "aparece na tela $id", 1, false !== strpos( $h, 'hdw-brand' ) ? 1 : 0 );
+}
+foreach ( array( 'plugins', 'dashboard', 'edit-post', 'woocommerce_page_wc-settings' ) as $id ) {
+    tela( $id );
+    check( "nao aparece na tela $id", '', captura( array( $admin, 'render_brand_header' ) ) );
+}
+tela( null );
+check( 'nao aparece sem tela (nem quebra)', '', captura( array( $admin, 'render_brand_header' ) ) );
+
+tela( 'edit-hdiscount_rule' );
+$GLOBALS['site_transients'] = array();
+$h = captura( array( $admin, 'render_brand_header' ) );
+check( 'mostra o nome do plugin', 1, false !== strpos( $h, 'HDiscount' ) ? 1 : 0 );
+check( 'mostra a versao', 1, false !== strpos( $h, 'Versão ' . HDISCOUNT_VERSION ) ? 1 : 0 );
+check( 'mostra o nome do desenvolvedor', 1, false !== strpos( $h, 'Anderson H' ) ? 1 : 0 );
+check( 'link do desenvolvedor aponta para o GitHub dele', 1, false !== strpos( $h, 'href="https://github.com/anderhofelmann"' ) ? 1 : 0 );
+check( 'link do repositorio', 1, false !== strpos( $h, 'href="https://github.com/anderhofelmann/hdiscount"' ) ? 1 : 0 );
+check( 'botao que abre o guia', 1, false !== strpos( $h, 'data-hdiscount-about="1"' ) ? 1 : 0 );
+check( 'links externos com rel=noopener noreferrer', substr_count( $h, 'target="_blank"' ), substr_count( $h, 'rel="noopener noreferrer"' ) );
+check( 'sem script nem estilo embutido no cabecalho', 0, preg_match( '/<script|<style|onclick=|style=/i', $h ) );
+check( 'sem atualizacao: mostra "Atualizado"', 1, false !== strpos( $h, 'hdw-chip--ok' ) ? 1 : 0 );
+check( 'sem atualizacao: nao mostra aviso de versao nova', 0, false !== strpos( $h, 'hdw-chip--update' ) ? 1 : 0 );
+
+$GLOBALS['site_transients']['update_plugins'] = (object) array( 'response' => array( 'hdiscount/hdiscount.php' => (object) array( 'new_version' => '9.9.9' ) ) );
+$h = captura( array( $admin, 'render_brand_header' ) );
+check( 'com versao nova: avisa e informa qual', 1, ( false !== strpos( $h, 'hdw-chip--update' ) && false !== strpos( $h, '9.9.9' ) ) ? 1 : 0 );
+check( 'com versao nova: some o "Atualizado"', 0, false !== strpos( $h, 'hdw-chip--ok' ) ? 1 : 0 );
+$GLOBALS['site_transients']['update_plugins'] = (object) array( 'response' => array( 'hdiscount/hdiscount.php' => (object) array( 'new_version' => '0.0.1' ) ) );
+check( 'versao "nova" mais antiga que a instalada e ignorada', 0, HDiscount_Admin::update_status()['available'] ? 1 : 0 );
+$GLOBALS['site_transients']['update_plugins'] = (object) array( 'response' => array( 'hdiscount/hdiscount.php' => (object) array( 'new_version' => '9.9<script>alert(1)</script>' ) ) );
+$h = captura( array( $admin, 'render_brand_header' ) );
+check( 'versao nova com HTML sai escapada', 1, ( false === strpos( $h, '<script>alert' ) && false !== strpos( $h, '&lt;script&gt;' ) ) ? 1 : 0 );
+$GLOBALS['site_transients'] = array();
+
+echo "\n[Rodape do painel]\n";
+tela( 'edit-hdiscount_rule' );
+$f = $admin->admin_footer_text( 'Obrigado por criar com o WordPress.' );
+check( 'rodape traz versao e desenvolvedor', 1, ( false !== strpos( $f, HDISCOUNT_VERSION ) && false !== strpos( $f, 'Anderson H' ) ) ? 1 : 0 );
+tela( 'dashboard' );
+check( 'em outras telas o rodape original e mantido', 'Obrigado por criar com o WordPress.', $admin->admin_footer_text( 'Obrigado por criar com o WordPress.' ) );
+
+echo "\n[Colunas da lista de regras]\n";
+function coluna( $col, $meta ) {
+    $GLOBALS['post_meta'] = array( 7 => array() );
+    foreach ( $meta as $k => $v ) { $GLOBALS['post_meta'][7][ $k ] = array( $v ); }
+    global $admin;
+    return captura( function () use ( $admin, $col ) { $admin->render_custom_columns( $col, 7 ); } );
+}
+$c = coluna( 'hdiscount_type', array( '_hdiscount_type' => 'pack_price', '_hdiscount_min_qty' => 3, '_hdiscount_pack_price' => 100 ) );
+check( 'tipo pack: pilula', 1, false !== strpos( $c, 'hdw-pill--type' ) ? 1 : 0 );
+check( 'tipo pack: resumo "Leve 3 por R$ 100,00"', 1, false !== strpos( $c, 'Leve 3 por R$ 100,00' ) ? 1 : 0 );
+$c = coluna( 'hdiscount_type', array( '_hdiscount_type' => 'percent', '_hdiscount_min_qty' => 2, '_hdiscount_percent' => 15 ) );
+check( 'tipo percentual: resumo "15% a partir de 2 un."', 1, false !== strpos( $c, '15% a partir de 2 un.' ) ? 1 : 0 );
+$c = coluna( 'hdiscount_type', array( '_hdiscount_type' => 'buy_x_get_y', '_hdiscount_buy_qty' => 4, '_hdiscount_get_qty' => 3 ) );
+check( 'tipo compre X leve Y: resumo "Compre 4, pague 3"', 1, false !== strpos( $c, 'Compre 4, pague 3' ) ? 1 : 0 );
+$c = coluna( 'hdiscount_type', array( '_hdiscount_type' => '<img src=x onerror=alert(1)>' ) );
+check( 'tipo desconhecido com HTML sai escapado', 1, ( false === strpos( $c, '<img' ) && false !== strpos( $c, '&lt;img' ) ) ? 1 : 0 );
+$c = coluna( 'hdiscount_type', array( '_hdiscount_type' => 'pack_price' ) );
+check( 'pack sem dados nao inventa resumo', 0, false !== strpos( $c, 'hdw-sub' ) ? 1 : 0 );
+foreach ( array( 'active' => 'Ativa', 'inactive' => 'Inativa', 'scheduled' => 'Agendada' ) as $st => $rot ) {
+    $c = coluna( 'hdiscount_status', array( '_hdiscount_status' => $st ) );
+    check( "status $st: pilula com o rotulo", 1, ( false !== strpos( $c, "hdw-pill--$st" ) && false !== strpos( $c, $rot ) ) ? 1 : 0 );
+}
+$c = coluna( 'hdiscount_status', array() );
+check( 'sem status: assume Ativa', 1, false !== strpos( $c, 'hdw-pill--active' ) ? 1 : 0 );
+$c = coluna( 'hdiscount_status', array( '_hdiscount_status' => '"><script>x</script>' ) );
+check( 'status desconhecido com HTML sai escapado', 1, ( false === strpos( $c, '<script>' ) ) ? 1 : 0 );
+$todas = '';
+foreach ( array( 'hdiscount_type', 'hdiscount_products', 'hdiscount_qty', 'hdiscount_period', 'hdiscount_status' ) as $col ) {
+    $todas .= coluna( $col, array( '_hdiscount_type' => 'pack_price', '_hdiscount_min_qty' => 3, '_hdiscount_pack_price' => 100, '_hdiscount_start_date' => '2026-11-01 10:00:00', '_hdiscount_status' => 'active' ) );
+}
+check( 'colunas sem estilo embutido (style=)', 0, false !== strpos( $todas, 'style=' ) ? 1 : 0 );
+
+echo "\n[Guia: cartao do desenvolvedor]\n";
+tela( 'plugins' );
+$m = captura( array( $admin, 'render_about_modal' ) );
+check( 'cartao do desenvolvedor presente', 1, false !== strpos( $m, 'hdw-dev' ) ? 1 : 0 );
+check( 'nome do desenvolvedor no guia', 1, false !== strpos( $m, 'Anderson H' ) ? 1 : 0 );
+check( 'links do guia: perfil, repositorio, problemas, novidades e documentacao', 5, preg_match_all( '#href="https://github\.com/anderhofelmann(?:/hdiscount(?:/issues|/releases)?)?"#', $m ) );
+check( 'links externos do guia com rel=noopener noreferrer', substr_count( $m, 'target="_blank"' ), substr_count( $m, 'rel="noopener noreferrer"' ) );
+check( 'guia mostra a versao', 1, false !== strpos( $m, 'v' . HDISCOUNT_VERSION ) ? 1 : 0 );
+$cab = file_get_contents( HDISCOUNT_PLUGIN_PATH . 'hdiscount.php' );
+preg_match( '/Requires at least:\s*([\d.]+)/', $cab, $rw ); preg_match( '/Requires PHP:\s*([\d.]+)/', $cab, $rp ); preg_match( '/WC requires at least:\s*([\d.]+)/', $cab, $rc );
+check( 'requisitos do guia batem com o cabecalho do plugin', 1,
+    false !== strpos( $m, 'WordPress ' . $rw[1] . ' · PHP ' . $rp[1] . ' · WooCommerce ' . $rc[1] ) ? 1 : 0 );
+tela( 'dashboard' );
+check( 'modal nao aparece em outras telas', '', captura( array( $admin, 'render_about_modal' ) ) );
+
+echo "\n[Arquivos do visual]\n";
+$js  = file_get_contents( HDISCOUNT_PLUGIN_PATH . 'assets/admin.js' );
+$css = file_get_contents( HDISCOUNT_PLUGIN_PATH . 'assets/admin.css' );
+$src = file_get_contents( HDISCOUNT_PLUGIN_PATH . 'includes/class-hdiscount-admin.php' );
+check( 'Esc fecha o modal (compara com e.key de verdade)', 1, ( false !== strpos( $js, "'Escape' === e.key" ) && ! preg_match( '/27 === e\.key(?!Code)/', $js ) ) ? 1 : 0 );
+check( 'Tab fica preso no modal (compara com e.key de verdade)', 1, ( false !== strpos( $js, "'Tab' !== e.key" ) && ! preg_match( '/9 !== e\.key(?!Code)/', $js ) ) ? 1 : 0 );
+check( 'script e estilo tambem na lista de Plugins (link "Sobre")', 1, false !== strpos( $src, "'plugins.php' !== \$hook" ) ? 1 : 0 );
+check( 'CSS do cabecalho e do cartao', 1, ( false !== strpos( $css, '.hdw-brand' ) && false !== strpos( $css, '.hdw-dev' ) ) ? 1 : 0 );
+check( 'CSS usa a paleta (variaveis)', 1, false !== strpos( $css, '--hdw-gold' ) ? 1 : 0 );
+check( 'coluna lateral: campos em 100% (nao cortam)', 1, ( false !== strpos( $css, '#side-sortables .form-table input[type="datetime-local"]' ) && preg_match( '/#side-sortables \.form-table select[^{]*\{[^}]*width:\s*100% !important/s', $css ) ) ? 1 : 0 );
+check( 'caixas nao escondem o que transborda (sem overflow:hidden no postbox)', 0, preg_match( '/#poststuff \.postbox\s*\{[^}]*overflow:\s*hidden/s', $css ) );
+check( 'CSS escopado: nada de regra solta em body/a/p', 0, preg_match( '/^(body|a|p|h1|h2|table|input)\s*[{,]/m', $css ) );
+check( 'icone na cor da marca', 1, false !== strpos( file_get_contents( HDISCOUNT_PLUGIN_PATH . 'assets/icon.svg' ), '#b08d57' ) ? 1 : 0 );
+check( 'selo de versao antigo da lista foi removido (fonte unica: o cabecalho)', 0, false !== strpos( $src, 'append_version_to_views' ) ? 1 : 0 );
 
 echo "\n" . str_repeat( '-', 74 ) . "\n";
 if ( 0 === $fails ) {

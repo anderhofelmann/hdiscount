@@ -279,14 +279,14 @@ jQuery( document ).ready( function( $ ) {
 
     // Esc fecha.
     $( document ).on( 'keyup', function( e ) {
-        if ( 27 === e.key && ! $modal.prop( 'hidden' ) ) {
+        if ( ( 'Escape' === e.key || 27 === e.keyCode ) && ! $modal.prop( 'hidden' ) ) {
             fechar();
         }
     } );
 
     // Mantem o foco dentro do modal enquanto ele estiver aberto.
     $( document ).on( 'keydown', function( e ) {
-        if ( 9 !== e.key || $modal.prop( 'hidden' ) ) {
+        if ( ( 'Tab' !== e.key && 9 !== e.keyCode ) || $modal.prop( 'hidden' ) ) {
             return;
         }
 

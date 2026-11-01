@@ -7,7 +7,7 @@ Requires PHP: 7.0
 Tested up to: 6.4
 WC requires at least: 3.0
 WC tested up to: 8.0
-Stable tag: 1.6.2
+Stable tag: 1.7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,15 @@ Sim, o plugin usa apenas APIs públicas do WooCommerce, compatível com HPOS.
 5. Carrinho mostrando preço promocional
 
 == Changelog ==
+
+= 1.7.0 =
+* Visual premium para loja de moda: cabecalho de marca (grafite, marfim e dourado) com nome, versao, se ha atualizacao e os dados do desenvolvedor, nas telas do plugin
+* Lista de regras mais elegante: tipo da regra com resumo ("Leve 3 por R$ 100,00"), status em pilulas e leitura mais clara de produtos, quantidades e periodo
+* Guia (modal) refinado, com cartao do desenvolvedor: links do GitHub, relato de problemas, novidades de cada versao, licenca e requisitos
+* Rodape do painel com a versao e o desenvolvedor
+* Correcao: a tecla Esc nao fechava o guia e o foco nao ficava preso dentro dele
+* Correcao: o link "Sobre" da lista de Plugins agora abre o guia (o script nao era carregado nessa tela)
+* O selo de versao deixou de aparecer na linha de filtros da lista (a versao agora fica no cabecalho)
 
 = 1.6.2 =
 * Correcao: na lista de regras, os links de filtro (Todas, Publicadas, Rascunhos...) sumiam e o PHP registrava avisos. O selo de versao tratava a lista de links como texto; agora entra como mais um item da lista

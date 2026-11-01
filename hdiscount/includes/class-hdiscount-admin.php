@@ -26,6 +26,13 @@ class HDiscount_Admin {
     const CPT_SLUG = 'hdiscount_rule';
 
     /**
+     * Dados do desenvolvedor, mostrados no cabecalho do painel e no guia.
+     */
+    const AUTHOR_NAME = 'Anderson Höfelmann';
+    const AUTHOR_URL  = 'https://github.com/anderhofelmann';
+    const REPO_URL    = 'https://github.com/anderhofelmann/hdiscount';
+
+    /**
      * Construtor
      */
     public function __construct() {
@@ -35,14 +42,12 @@ class HDiscount_Admin {
         // Atalho de volta para a lista, dentro da caixa "Publicar".
         add_filter( 'post_submitbox_misc_actions', array( $this, 'render_back_link' ) );
 
-        // Guia do plugin em modal, nas telas onde o plugin aparece.
-        add_action( 'restrict_manage_posts', array( $this, 'render_about_button' ) );
-        add_action( 'edit_form_top', array( $this, 'render_about_button' ) );
-        add_filter( 'plugin_row_meta', array( $this, 'add_plugin_row_link' ), 10, 2 );
+        // Cabecalho de marca (versao, atualizacao, desenvolvedor e guia) nas telas do plugin.
+        add_action( 'in_admin_header', array( $this, 'render_brand_header' ) );
+        add_filter( 'admin_footer_text', array( $this, 'admin_footer_text' ) );
 
-        // Versao visivel e conteudo do modal, uma vez por tela.
-        add_filter( 'views_edit-' . self::CPT_SLUG, array( $this, 'append_version_to_views' ) );
-        add_action( 'edit_form_top', array( $this, 'render_version_badge' ), 5 );
+        // Guia do plugin em modal: o botao fica no cabecalho e na linha do plugin.
+        add_filter( 'plugin_row_meta', array( $this, 'add_plugin_row_link' ), 10, 2 );
         add_action( 'admin_footer', array( $this, 'render_about_modal' ) );
 
         add_action( 'save_post', array( $this, 'save_meta_box_data' ), 10, 2 );
@@ -120,16 +125,117 @@ class HDiscount_Admin {
     }
 
     /**
-     * Botao que abre o guia do plugin em modal.
+     * A tela atual e uma das telas do plugin (lista de regras ou edicao de uma regra)?
      *
-     * Aparece na lista de regras e no topo da tela de edicao. Um modal
-     * dispensa uma pagina separada: nao depende de permissao nem de URL
-     * propria, e o conteudo fica onde o usuario ja esta trabalhando.
+     * @return bool
      */
-    public function render_about_button() {
-        printf(
-            '<button type="button" class="button hdiscount-about-trigger" data-hdiscount-about="1">%s</button>',
-            esc_html__( 'Sobre o HDiscount', 'hdiscount' )
+    private function is_plugin_screen() {
+        $screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+
+        return $screen && in_array( (string) $screen->id, array( 'edit-' . self::CPT_SLUG, self::CPT_SLUG ), true );
+    }
+
+    /**
+     * Ha versao nova do plugin? Le o que o WordPress ja sabe (sem nenhuma consulta extra).
+     *
+     * @return array array( 'available' => bool, 'version' => string )
+     */
+    public static function update_status() {
+        $out  = array( 'available' => false, 'version' => '' );
+        $info = function_exists( 'get_site_transient' ) ? get_site_transient( 'update_plugins' ) : false;
+        $file = 'hdiscount/hdiscount.php';
+
+        if ( is_object( $info ) && ! empty( $info->response[ $file ] ) ) {
+            $novo = is_object( $info->response[ $file ] ) ? $info->response[ $file ] : (object) $info->response[ $file ];
+            if ( ! empty( $novo->new_version ) && version_compare( (string) $novo->new_version, self::get_version(), '>' ) ) {
+                $out = array( 'available' => true, 'version' => (string) $novo->new_version );
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Marca do plugin: etiqueta de preco dourada com o simbolo de desconto (SVG inline, sem requisicao).
+     *
+     * @param int $size Lado em pixels.
+     * @return string
+     */
+    private static function brand_mark( $size = 44 ) {
+        $size = (int) $size;
+
+        return '<svg class="hdw-mark" viewBox="0 0 64 64" width="' . $size . '" height="' . $size . '" aria-hidden="true" focusable="false">'
+            . '<path fill="#b08d57" d="M6 6h30l22 22a6 6 0 0 1 0 8.5l-21.5 21.5a6 6 0 0 1-8.5 0L6 36z"/>'
+            . '<circle cx="17" cy="17" r="4.5" fill="#1c1b1a"/>'
+            . '<path d="M27 45 45 27" stroke="#1c1b1a" stroke-width="4.5" stroke-linecap="round" fill="none"/>'
+            . '<circle cx="30" cy="30" r="4.5" fill="#1c1b1a"/><circle cx="42" cy="42" r="4.5" fill="#1c1b1a"/>'
+            . '</svg>';
+    }
+
+    /**
+     * Cabecalho de marca: nome, versao, situacao da atualizacao, desenvolvedor e atalhos.
+     */
+    public function render_brand_header() {
+        if ( ! $this->is_plugin_screen() ) {
+            return;
+        }
+
+        $versao = self::get_version();
+        $update = self::update_status();
+        ?>
+        <div class="hdw-brand">
+            <div class="hdw-brand__id">
+                <?php echo self::brand_mark( 44 ); // SVG fixo, sem dados externos. ?>
+                <div class="hdw-brand__name">
+                    <span class="hdw-brand__title"><?php esc_html_e( 'HDiscount', 'hdiscount' ); ?></span>
+                    <span class="hdw-brand__tag"><?php esc_html_e( 'Regras de desconto para a sua loja', 'hdiscount' ); ?></span>
+                </div>
+            </div>
+
+            <div class="hdw-brand__meta">
+                <span class="hdw-chip hdw-chip--version"><?php echo esc_html( sprintf( /* translators: %s: versao do plugin */ __( 'Versão %s', 'hdiscount' ), $versao ) ); ?></span>
+                <?php if ( $update['available'] ) : ?>
+                    <a class="hdw-chip hdw-chip--update" href="<?php echo esc_url( admin_url( 'plugins.php?plugin_status=upgrade' ) ); ?>">
+                        <?php echo esc_html( sprintf( /* translators: %s: nova versao */ __( 'Nova versão %s disponível', 'hdiscount' ), $update['version'] ) ); ?>
+                    </a>
+                <?php else : ?>
+                    <span class="hdw-chip hdw-chip--ok"><?php esc_html_e( 'Atualizado', 'hdiscount' ); ?></span>
+                <?php endif; ?>
+                <span class="hdw-brand__by">
+                    <?php
+                    printf(
+                        /* translators: %s: link com o nome do desenvolvedor */
+                        esc_html__( 'Desenvolvido por %s', 'hdiscount' ),
+                        '<a href="' . esc_url( self::AUTHOR_URL ) . '" target="_blank" rel="noopener noreferrer">' . esc_html( self::AUTHOR_NAME ) . '</a>'
+                    );
+                    ?>
+                </span>
+            </div>
+
+            <div class="hdw-brand__actions">
+                <button type="button" class="hdw-btn" data-hdiscount-about="1"><?php esc_html_e( 'Guia e sobre', 'hdiscount' ); ?></button>
+                <a class="hdw-btn hdw-btn--ghost" href="<?php echo esc_url( self::REPO_URL ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'GitHub', 'hdiscount' ); ?></a>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Rodape do painel nas telas do plugin: versao e desenvolvedor.
+     *
+     * @param string $texto Texto original do rodape.
+     * @return string
+     */
+    public function admin_footer_text( $texto ) {
+        if ( ! $this->is_plugin_screen() ) {
+            return $texto;
+        }
+
+        return sprintf(
+            /* translators: 1: versao, 2: link com o nome do desenvolvedor */
+            esc_html__( 'HDiscount %1$s · Desenvolvido por %2$s', 'hdiscount' ),
+            esc_html( self::get_version() ),
+            '<a href="' . esc_url( self::AUTHOR_URL ) . '" target="_blank" rel="noopener noreferrer">' . esc_html( self::AUTHOR_NAME ) . '</a>'
         );
     }
 
@@ -149,55 +255,15 @@ class HDiscount_Admin {
             '<button type="button" class="hdiscount-about-trigger hdiscount-about-trigger--inline" data-hdiscount-about="1">%s</button>',
             esc_html__( 'Sobre', 'hdiscount' )
         );
+        $links[] = sprintf(
+            '<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
+            esc_url( self::REPO_URL ),
+            esc_html__( 'GitHub', 'hdiscount' )
+        );
 
         return $links;
     }
 
-
-    /**
-     * Acrescenta a versao no rodape das abas do plugin.
-     *
-     * Aparece em "Todas as regras", "Publicadas", "Rascunhos" etc. É o jeito
-     * mais rapido de conferir qual versao esta instalada sem sair da tela.
-     *
-     * @param array $views Links de filtro da lista (chave => HTML).
-     * @return array
-     */
-    public function append_version_to_views( $views ) {
-        // O WordPress entrega uma LISTA de links (Todas, Publicadas...), nao um texto. Tratar como texto
-        // fazia a lista sumir e gerava avisos de PHP; aqui a versao entra como mais um item da lista.
-        $views = is_array( $views ) ? $views : array();
-
-        $views['hdiscount_version'] = '<span class="hdiscount-version-tag">'
-            . sprintf(
-                /* translators: %s: versao do plugin */
-                esc_html__( 'HDiscount %s', 'hdiscount' ),
-                esc_html( self::get_version() )
-            )
-            . '</span>';
-
-        return $views;
-    }
-
-    /**
-     * Selo de versao no topo da tela de edicao da regra.
-     */
-    public function render_version_badge() {
-        global $post;
-
-        if ( ! $post || self::CPT_SLUG !== $post->post_type ) {
-            return;
-        }
-
-        printf(
-            '<p class="hdiscount-version-tag hdiscount-version-tag--top">%s</p>',
-            sprintf(
-                /* translators: %s: versao do plugin */
-                esc_html__( 'HDiscount %s', 'hdiscount' ),
-                esc_html( self::get_version() )
-            )
-        );
-    }
 
     /**
      * Conteudo do guia, exibido em modal.
@@ -225,11 +291,9 @@ class HDiscount_Admin {
             <div class="hdiscount-modal__box" role="document">
                 <div class="hdiscount-modal__header">
                     <h2 id="hdiscount-about-title">
-                        <img class="hdiscount-about-logo"
-                             src="<?php echo esc_url( HDISCOUNT_PLUGIN_URL . 'assets/icon.svg' ); ?>"
-                             alt="" width="32" height="32" />
-                        <?php esc_html_e( 'HDiscount', 'hdiscount' ); ?>
-                        <span class="hdiscount-modal__version"><?php echo esc_html( $versao ); ?></span>
+                        <?php echo self::brand_mark( 34 ); // SVG fixo, sem dados externos. ?>
+                        <span class="hdw-modal-title"><?php esc_html_e( 'HDiscount', 'hdiscount' ); ?></span>
+                        <span class="hdiscount-modal__version"><?php echo esc_html( 'v' . $versao ); ?></span>
                     </h2>
                     <button type="button" class="hdiscount-modal__close"
                             data-hdiscount-about-close="1" aria-label="<?php esc_attr_e( 'Fechar', 'hdiscount' ); ?>">&times;</button>
@@ -248,7 +312,7 @@ class HDiscount_Admin {
             </h1>
 
             <p class="about-text">
-                <?php esc_html_e( 'Crie promocoes do tipo "leve 3 por R$ 100,00". O preco de cada produto continua normal, e o desconto aparece so no total do carrinho, como um cupom.', 'hdiscount' ); ?>
+                <?php esc_html_e( 'Crie promoções do tipo "leve 3 por R$ 100,00". O preço de cada produto continua normal, e o desconto aparece só no total do carrinho, como um cupom.', 'hdiscount' ); ?>
             </p>
 
             <hr>
@@ -258,34 +322,34 @@ class HDiscount_Admin {
                 <div class="hdiscount-about-card">
                     <h2><?php esc_html_e( '1. Crie a regra', 'hdiscount' ); ?></h2>
                     <ol>
-                        <li><?php esc_html_e( 'Va em HDiscount e clique em "Adicionar Nova".', 'hdiscount' ); ?></li>
-                        <li><?php esc_html_e( 'De um NOME a regra: e ele que o cliente ve no total, entre parenteses.', 'hdiscount' ); ?></li>
+                        <li><?php esc_html_e( 'Vá em HDiscount e clique em "Adicionar Nova".', 'hdiscount' ); ?></li>
+                        <li><?php esc_html_e( 'Dê um NOME à regra: é ele que o cliente vê no total, entre parênteses.', 'hdiscount' ); ?></li>
                         <li><?php esc_html_e( 'Escolha o tipo de desconto:', 'hdiscount' ); ?></li>
                     </ol>
                     <ul class="hdiscount-about-types">
-                        <li><strong><?php esc_html_e( 'Preco fixo do pack', 'hdiscount' ); ?></strong> &mdash; <?php esc_html_e( '3 unidades por um preco total combinado. Ex: "Leve 3 por R$ 100,00".', 'hdiscount' ); ?></li>
-                        <li><strong><?php esc_html_e( 'Desconto percentual', 'hdiscount' ); ?></strong> &mdash; <?php esc_html_e( 'X% de desconto a partir da quantidade minima.', 'hdiscount' ); ?></li>
+                        <li><strong><?php esc_html_e( 'Preço fixo do pack', 'hdiscount' ); ?></strong> &mdash; <?php esc_html_e( '3 unidades por um preço total combinado. Ex: "Leve 3 por R$ 100,00".', 'hdiscount' ); ?></li>
+                        <li><strong><?php esc_html_e( 'Desconto percentual', 'hdiscount' ); ?></strong> &mdash; <?php esc_html_e( 'X% de desconto a partir da quantidade mínima.', 'hdiscount' ); ?></li>
                         <li><strong><?php esc_html_e( 'Compre X leve Y', 'hdiscount' ); ?></strong> &mdash; <?php esc_html_e( 'O cliente leva mais unidades pagando por menos. Ex: "Compre 4, pague 3".', 'hdiscount' ); ?></li>
                     </ul>
                 </div>
 
                 <div class="hdiscount-about-card">
                     <h2><?php esc_html_e( '2. Escolha os produtos', 'hdiscount' ); ?></h2>
-                    <p><?php esc_html_e( 'Busque por nome ou SKU. O produto pai vem primeiro na lista e as variacoes dele aparecem logo abaixo.', 'hdiscount' ); ?></p>
-                    <p><strong><?php esc_html_e( 'Aplicar a todas as variacoes', 'hdiscount' ); ?></strong> &mdash; <?php esc_html_e( 'marcado, escolher o produto ja vale para todas as cores e tamanhos, inclusive os que forem criados depois.', 'hdiscount' ); ?></p>
-                    <p><strong><?php esc_html_e( 'Misturar produtos no pack', 'hdiscount' ); ?></strong> &mdash; <?php esc_html_e( 'marcado, as unidades do pack podem vir de produtos diferentes. Com "Camiseta" e "Calca" na lista, comprar 1 + 2 fecha o pack de 3.', 'hdiscount' ); ?></p>
+                    <p><?php esc_html_e( 'Busque por nome ou SKU. O produto pai vem primeiro na lista e as variações dele aparecem logo abaixo.', 'hdiscount' ); ?></p>
+                    <p><strong><?php esc_html_e( 'Aplicar a todas as variações', 'hdiscount' ); ?></strong> &mdash; <?php esc_html_e( 'marcado, escolher o produto já vale para todas as cores e tamanhos, inclusive os que forem criados depois.', 'hdiscount' ); ?></p>
+                    <p><strong><?php esc_html_e( 'Misturar produtos no pack', 'hdiscount' ); ?></strong> &mdash; <?php esc_html_e( 'marcado, as unidades do pack podem vir de produtos diferentes. Com "Camiseta" e "Calça" na lista, comprar 1 + 2 fecha o pack de 3.', 'hdiscount' ); ?></p>
                 </div>
 
                 <div class="hdiscount-about-card">
-                    <h2><?php esc_html_e( '3. Ajuste o periodo', 'hdiscount' ); ?></h2>
-                    <p><?php esc_html_e( 'Informe a data e hora de inicio e de fim. Sem data de fim, a regra vale por tempo indeterminado.', 'hdiscount' ); ?></p>
-                    <p><?php esc_html_e( 'Para interromper a promocao antes da hora, basta colocar a regra como Inativa, sem mexer nas datas.', 'hdiscount' ); ?></p>
+                    <h2><?php esc_html_e( '3. Ajuste o período', 'hdiscount' ); ?></h2>
+                    <p><?php esc_html_e( 'Informe a data e hora de início e de fim. Sem data de fim, a regra vale por tempo indeterminado.', 'hdiscount' ); ?></p>
+                    <p><?php esc_html_e( 'Para interromper a promoção antes da hora, basta colocar a regra como Inativa, sem mexer nas datas.', 'hdiscount' ); ?></p>
                 </div>
 
                 <div class="hdiscount-about-card">
-                    <h2><?php esc_html_e( 'Quantidade maxima', 'hdiscount' ); ?></h2>
-                    <p><?php esc_html_e( 'Use "Quantidade maxima" para limitar quantas unidades entram no pack.', 'hdiscount' ); ?></p>
-                    <p><?php esc_html_e( 'Com minimo 3 e maximo 3, comprando 4 unidades, 3 recebem o preco do pack e a quarta fica pelo preco normal.', 'hdiscount' ); ?></p>
+                    <h2><?php esc_html_e( 'Quantidade máxima', 'hdiscount' ); ?></h2>
+                    <p><?php esc_html_e( 'Use "Quantidade máxima" para limitar quantas unidades entram no pack.', 'hdiscount' ); ?></p>
+                    <p><?php esc_html_e( 'Com mínimo 3 e máximo 3, comprando 4 unidades, 3 recebem o preço do pack e a quarta fica pelo preço normal.', 'hdiscount' ); ?></p>
                 </div>
 
             </div>
@@ -304,7 +368,7 @@ class HDiscount_Admin {
                     </tr>
                 </thead>
                 <tbody>
-                    <tr><td>2</td><td>R$ 70,00</td><td><?php esc_html_e( 'abaixo do minimo, sem promocao', 'hdiscount' ); ?></td></tr>
+                    <tr><td>2</td><td>R$ 70,00</td><td><?php esc_html_e( 'abaixo do mínimo, sem promoção', 'hdiscount' ); ?></td></tr>
                     <tr><td>3</td><td>R$ 100,00</td><td><?php esc_html_e( '1 pack fechado', 'hdiscount' ); ?></td></tr>
                     <tr><td>4</td><td>R$ 135,00</td><td><?php esc_html_e( '1 pack + 1 avulsa a R$ 35,00', 'hdiscount' ); ?></td></tr>
                     <tr><td>6</td><td>R$ 200,00</td><td><?php esc_html_e( '2 packs fechados', 'hdiscount' ); ?></td></tr>
@@ -312,43 +376,44 @@ class HDiscount_Admin {
             </table>
 
             <p class="description" style="margin-top:12px;">
-                <?php esc_html_e( 'No total do carrinho o desconto aparece em uma linha so, somando todos os produtos que fecharam pack.', 'hdiscount' ); ?>
+                <?php esc_html_e( 'No total do carrinho o desconto aparece em uma linha só, somando todos os produtos que fecharam pack.', 'hdiscount' ); ?>
             </p>
 
             <hr>
 
             <h2><?php esc_html_e( 'Dicas', 'hdiscount' ); ?></h2>
             <ul class="hdiscount-about-tips">
-                <li><?php esc_html_e( 'Use produtos com o mesmo preco quando ativar "Misturar produtos", para o desconto ser sempre igual.', 'hdiscount' ); ?></li>
-                <li><?php esc_html_e( 'O painel mostra um exemplo de calculo enquanto voce preenche a regra. Se algo estiver faltando, ele avisa.', 'hdiscount' ); ?></li>
-                <li><?php esc_html_e( 'Varias regras podem valer ao mesmo tempo. Cada uma soma no total separadamente.', 'hdiscount' ); ?></li>
-                <li><?php esc_html_e( 'Desconfie de um pack cujo preco seja MAIOR que o total dos produtos: nesse caso a regra simplesmente nao se aplica.', 'hdiscount' ); ?></li>
+                <li><?php esc_html_e( 'Use produtos com o mesmo preço quando ativar "Misturar produtos", para o desconto ser sempre igual.', 'hdiscount' ); ?></li>
+                <li><?php esc_html_e( 'O painel mostra um exemplo de cálculo enquanto você preenche a regra. Se algo estiver faltando, ele avisa.', 'hdiscount' ); ?></li>
+                <li><?php esc_html_e( 'Várias regras podem valer ao mesmo tempo. Cada uma soma no total separadamente.', 'hdiscount' ); ?></li>
+                <li><?php esc_html_e( 'Desconfie de um pack cujo preço seja MAIOR que o total dos produtos: nesse caso a regra simplesmente não se aplica.', 'hdiscount' ); ?></li>
             </ul>
 
-            <p class="hdiscount-about-footer">
-                <?php
-                printf(
-                    /* translators: 1: nome do autor, 2: link do GitHub */
-                    esc_html__( 'Desenvolvido por %1$s - %2$s', 'hdiscount' ),
-                    esc_html__( 'Anderson Höfelmann', 'hdiscount' ),
-                    '<a href="https://github.com/anderhofelmann" target="_blank" rel="noopener noreferrer">github.com/anderhofelmann</a>'
-                );
-                ?>
-                &nbsp;|&nbsp;
-                <?php
-                printf(
-                    esc_html__( 'Versao %s', 'hdiscount' ),
-                    esc_html( $versao )
-                );
-                ?>
-            </p>
+            <div class="hdw-dev">
+                <div class="hdw-dev__avatar" aria-hidden="true">AH</div>
+                <div class="hdw-dev__info">
+                    <p class="hdw-dev__label"><?php esc_html_e( 'Desenvolvedor', 'hdiscount' ); ?></p>
+                    <p class="hdw-dev__name"><?php echo esc_html( self::AUTHOR_NAME ); ?></p>
+                    <p class="hdw-dev__links">
+                        <a href="<?php echo esc_url( self::AUTHOR_URL ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Perfil no GitHub', 'hdiscount' ); ?></a>
+                        <a href="<?php echo esc_url( self::REPO_URL ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Repositório', 'hdiscount' ); ?></a>
+                        <a href="<?php echo esc_url( self::REPO_URL . '/issues' ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Relatar um problema', 'hdiscount' ); ?></a>
+                        <a href="<?php echo esc_url( self::REPO_URL . '/releases' ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Novidades de cada versão', 'hdiscount' ); ?></a>
+                    </p>
+                </div>
+                <dl class="hdw-dev__facts">
+                    <div><dt><?php esc_html_e( 'Versão', 'hdiscount' ); ?></dt><dd><?php echo esc_html( $versao ); ?></dd></div>
+                    <div><dt><?php esc_html_e( 'Licença', 'hdiscount' ); ?></dt><dd><?php esc_html_e( 'GPL v2 ou posterior', 'hdiscount' ); ?></dd></div>
+                    <div><dt><?php esc_html_e( 'Requer', 'hdiscount' ); ?></dt><dd><?php esc_html_e( 'WordPress 5.0 · PHP 7.0 · WooCommerce 3.0', 'hdiscount' ); ?></dd></div>
+                </dl>
+            </div>
 
                 </div>
                 </div>
 
                 <div class="hdiscount-modal__footer">
                     <a href="https://github.com/anderhofelmann/hdiscount" target="_blank" rel="noopener noreferrer">
-                        <?php esc_html_e( 'Documentacao no GitHub', 'hdiscount' ); ?>
+                        <?php esc_html_e( 'Documentação no GitHub', 'hdiscount' ); ?>
                     </a>
                 </div>
             </div>
@@ -1344,6 +1409,40 @@ $mesmo_preco = ( count( $precos_produto ) > 0 && 1 === count( array_unique( wp_l
     }
 
     /**
+     * Resumo da regra em uma linha ("Leve 3 por R$ 100,00"), para a lista ser lida de relance.
+     *
+     * @param int    $post_id ID da regra.
+     * @param string $type    Tipo da regra.
+     * @return string Texto simples (o chamador escapa).
+     */
+    private function rule_summary( $post_id, $type ) {
+        $min = (int) get_post_meta( $post_id, '_hdiscount_min_qty', true );
+
+        if ( 'pack_price' === $type ) {
+            $price = (float) get_post_meta( $post_id, '_hdiscount_pack_price', true );
+            if ( $min > 0 && $price > 0 ) {
+                /* translators: 1: quantidade, 2: preco do pack */
+                return sprintf( __( 'Leve %1$d por %2$s', 'hdiscount' ), $min, html_entity_decode( strip_tags( wc_price( $price ) ), ENT_QUOTES, 'UTF-8' ) );
+            }
+        } elseif ( 'percent' === $type ) {
+            $pct = (float) get_post_meta( $post_id, '_hdiscount_percent', true );
+            if ( $min > 0 && $pct > 0 ) {
+                /* translators: 1: percentual, 2: quantidade minima */
+                return sprintf( __( '%1$s%% a partir de %2$d un.', 'hdiscount' ), rtrim( rtrim( number_format( $pct, 2, ',', '' ), '0' ), ',' ), $min );
+            }
+        } elseif ( 'buy_x_get_y' === $type ) {
+            $buy = (int) get_post_meta( $post_id, '_hdiscount_buy_qty', true );
+            $get = (int) get_post_meta( $post_id, '_hdiscount_get_qty', true );
+            if ( $buy > 0 && $get > 0 ) {
+                /* translators: 1: leva, 2: paga */
+                return sprintf( __( 'Compre %1$d, pague %2$d', 'hdiscount' ), $buy, $get );
+            }
+        }
+
+        return '';
+    }
+
+    /**
      * Renderiza conteúdo das colunas personalizadas
      */
     public function render_custom_columns( $column, $post_id ) {
@@ -1355,7 +1454,12 @@ $mesmo_preco = ( count( $precos_produto ) > 0 && 1 === count( array_unique( wp_l
                     'percent'        => __( 'Desconto %', 'hdiscount' ),
                     'buy_x_get_y'    => __( 'Compre X Leve Y', 'hdiscount' ),
                 );
-                echo isset( $labels[ $type ] ) ? esc_html( $labels[ $type ] ) : esc_html( $type );
+                echo '<span class="hdw-pill hdw-pill--type">' . ( isset( $labels[ $type ] ) ? esc_html( $labels[ $type ] ) : esc_html( $type ) ) . '</span>';
+
+                $resumo = $this->rule_summary( $post_id, (string) $type );
+                if ( '' !== $resumo ) {
+                    echo '<span class="hdw-sub">' . esc_html( $resumo ) . '</span>';
+                }
                 break;
 
             case 'hdiscount_products':
@@ -1364,7 +1468,7 @@ $mesmo_preco = ( count( $precos_produto ) > 0 && 1 === count( array_unique( wp_l
                 $count = count( $ids );
 
                 if ( ! $count ) {
-                    echo '<span style="color:#d63638;">' . esc_html__( 'Nenhum', 'hdiscount' ) . '</span>';
+                    echo '<span class="hdw-warn">' . esc_html__( 'Nenhum', 'hdiscount' ) . '</span>';
                     break;
                 }
 
@@ -1377,13 +1481,13 @@ $mesmo_preco = ( count( $precos_produto ) > 0 && 1 === count( array_unique( wp_l
                     }
                 }
 
-                echo esc_html( sprintf(
+                echo '<strong class="hdw-count">' . esc_html( sprintf(
                     _n( '%d produto', '%d produtos', $count, 'hdiscount' ),
                     $count
-                ) );
+                ) ) . '</strong>';
 
                 if ( $nomes ) {
-                    echo ' <span style="color:#646970;">(' . esc_html( implode( ', ', $nomes ) ) . ( $count > 3 ? '…' : '' ) . ')</span>';
+                    echo ' <span class="hdw-sub hdw-sub--inline">(' . esc_html( implode( ', ', $nomes ) ) . ( $count > 3 ? '…' : '' ) . ')</span>';
                 }
 
                 // Sinaliza a extensao para variacoes.
@@ -1391,7 +1495,7 @@ $mesmo_preco = ( count( $precos_produto ) > 0 && 1 === count( array_unique( wp_l
                 $extend = '' === $extend ? 'yes' : $extend;
 
                 if ( 'yes' === $extend ) {
-                    echo '<br><span class="hdiscount-tag hdiscount-tag--variable" style="font-size:11px;">'
+                    echo '<br><span class="hdiscount-tag hdiscount-tag--variable">'
                         . esc_html__( '+ todas as variações', 'hdiscount' )
                         . '</span>';
                 }
@@ -1401,28 +1505,29 @@ $mesmo_preco = ( count( $precos_produto ) > 0 && 1 === count( array_unique( wp_l
                 $min = get_post_meta( $post_id, '_hdiscount_min_qty', true );
                 $max = get_post_meta( $post_id, '_hdiscount_max_qty', true );
                 $limit = get_post_meta( $post_id, '_hdiscount_limit_to_max', true );
-                echo esc_html( $min );
+                echo '<span class="hdw-qty">' . esc_html( $min );
                 if ( $max > 0 ) {
                     echo ' – ' . esc_html( $max );
                     if ( 'yes' === $limit ) {
-                        echo ' <span class="dashicons dashicons-lock" style="font-size:14px; vertical-align:middle;" title="' . esc_attr__( 'Limitado ao máximo', 'hdiscount' ) . '"></span>';
+                        echo ' <span class="dashicons dashicons-lock hdw-lock" title="' . esc_attr__( 'Limitado ao máximo', 'hdiscount' ) . '"></span>';
                     }
                 } else {
                     echo '+';
                 }
+                echo '</span>';
                 break;
 
             case 'hdiscount_period':
                 $start = get_post_meta( $post_id, '_hdiscount_start_date', true );
                 $end   = get_post_meta( $post_id, '_hdiscount_end_date', true );
                 if ( $start ) {
-                    echo '<strong>' . __( 'Início:', 'hdiscount' ) . '</strong> ' . date_i18n( 'd/m/Y H:i', strtotime( $start ) ) . '<br>';
+                    echo '<span class="hdw-period"><strong>' . esc_html__( 'Início:', 'hdiscount' ) . '</strong> ' . esc_html( date_i18n( 'd/m/Y H:i', strtotime( $start ) ) ) . '</span>';
                 }
                 if ( $end ) {
-                    echo '<strong>' . __( 'Fim:', 'hdiscount' ) . '</strong> ' . date_i18n( 'd/m/Y H:i', strtotime( $end ) );
+                    echo '<span class="hdw-period"><strong>' . esc_html__( 'Fim:', 'hdiscount' ) . '</strong> ' . esc_html( date_i18n( 'd/m/Y H:i', strtotime( $end ) ) ) . '</span>';
                 }
                 if ( ! $start && ! $end ) {
-                    echo '<span style="color:#999;">' . __( 'Sem limite de tempo', 'hdiscount' ) . '</span>';
+                    echo '<span class="hdw-sub hdw-sub--inline">' . esc_html__( 'Sem limite de tempo', 'hdiscount' ) . '</span>';
                 }
                 break;
 
@@ -1430,11 +1535,15 @@ $mesmo_preco = ( count( $precos_produto ) > 0 && 1 === count( array_unique( wp_l
                 $status = get_post_meta( $post_id, '_hdiscount_status', true );
                 $status = $status ?: 'active';
                 $labels = array(
-                    'active'     => '<span style="color:#00a32a;">● ' . __( 'Ativa', 'hdiscount' ) . '</span>',
-                    'inactive'   => '<span style="color:#d63638;">● ' . __( 'Inativa', 'hdiscount' ) . '</span>',
-                    'scheduled'  => '<span style="color:#dba617;">● ' . __( 'Agendada', 'hdiscount' ) . '</span>',
+                    'active'     => __( 'Ativa', 'hdiscount' ),
+                    'inactive'   => __( 'Inativa', 'hdiscount' ),
+                    'scheduled'  => __( 'Agendada', 'hdiscount' ),
                 );
-                echo isset( $labels[ $status ] ) ? $labels[ $status ] : esc_html( $status );
+                if ( isset( $labels[ $status ] ) ) {
+                    echo '<span class="hdw-pill hdw-pill--' . esc_attr( $status ) . '"><span class="hdw-dot"></span>' . esc_html( $labels[ $status ] ) . '</span>';
+                } else {
+                    echo '<span class="hdw-pill">' . esc_html( $status ) . '</span>';
+                }
                 break;
         }
     }
@@ -1444,7 +1553,8 @@ $mesmo_preco = ( count( $precos_produto ) > 0 && 1 === count( array_unique( wp_l
      */
     public function enqueue_admin_assets( $hook ) {
         global $post_type;
-        if ( 'hdiscount_rule' !== $post_type ) {
+        // Telas do plugin e a lista de Plugins (onde fica o link "Sobre", que abre o guia em modal).
+        if ( 'hdiscount_rule' !== $post_type && 'plugins.php' !== $hook ) {
             return;
         }
 

@@ -5,6 +5,15 @@ Todas as mudancas do HDiscount.
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 e o versionamento segue [SemVer](https://semver.org/lang/pt-BR/).
 
+## [1.7.0] - 2026-11-01
+
+- Visual premium para loja de moda: cabecalho de marca (grafite, marfim e dourado) com nome, versao, situacao da atualizacao e dados do desenvolvedor nas telas do plugin
+- Lista de regras: tipo com resumo ("Leve 3 por R$ 100,00"), status em pilulas, leitura mais clara de produtos, quantidades e periodo
+- Guia em modal refinado, com cartao do desenvolvedor (GitHub, relato de problemas, novidades, licenca e requisitos); rodape do painel com versao e desenvolvedor
+- Correcao: Esc nao fechava o guia e o foco nao ficava preso nele (comparacao de tecla errada)
+- Correcao: o link "Sobre" da lista de Plugins agora abre o guia
+- O selo de versao saiu da linha de filtros (a versao fica no cabecalho)
+
 ## [1.6.2] - 2026-11-01
 
 - Correcao: na lista de regras, os links de filtro (Todas, Publicadas, Rascunhos...) sumiam e o PHP registrava avisos. O selo de versao tratava a lista de links como texto; agora entra como mais um item da lista
